@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f5b45">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>DPRO集客ナビ｜DPRO SHOP 管理画面</title>
+  <style>
+    :root {
+      --bg: #f4f7f5;
+      --surface: #ffffff;
+      --surface-soft: #eef5f1;
+      --ink: #18332a;
+      --muted: #687a73;
+      --line: #d9e5df;
+      --brand: #0f5b45;
+      --brand-2: #19765a;
+      --brand-soft: #e2f1eb;
+      --info: #245b8f;
+      --info-soft: #eaf3fb;
+      --warn: #9a6500;
+      --warn-soft: #fff4d9;
+      --danger: #a33b36;
+      --danger-soft: #fdeceb;
+      --shadow: 0 14px 40px rgba(24, 51, 42, 0.10);
+      --radius: 18px;
+      --sidebar: 278px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(25,118,90,.12), transparent 36rem),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    [hidden] { display: none !important; }
+
+    .app-shell { min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 24px;
+      color: #fff;
+      background: linear-gradient(110deg, #0b4737, #10654c 58%, #1d775d);
+      box-shadow: 0 8px 26px rgba(15,91,69,.18);
+    }
+    .brand-row { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .brand-mark {
+      width: 44px; height: 44px; border-radius: 13px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.26);
+      font-weight: 900; letter-spacing: .03em;
+    }
+    .brand-copy { min-width: 0; }
+    .brand-title { margin: 0; font-size: 1.08rem; line-height: 1.2; font-weight: 850; }
+    .brand-sub { margin: 3px 0 0; font-size: .78rem; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-height: 38px; padding: 7px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22);
+      font-size: .82rem; font-weight: 750;
+    }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #ffd166; box-shadow: 0 0 0 4px rgba(255,209,102,.16); }
+    .status-dot.ok { background: #7ee2b8; box-shadow: 0 0 0 4px rgba(126,226,184,.16); }
+    .status-dot.bad { background: #ff9b92; box-shadow: 0 0 0 4px rgba(255,155,146,.16); }
+    .top-button {
+      min-height: 40px; padding: 8px 13px; border-radius: 11px;
+      color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.24);
+      font-weight: 750;
+    }
+    .top-button:hover { background: rgba(255,255,255,.2); }
+
+    .preauth-wrap { max-width: 1120px; margin: 0 auto; padding: 42px 24px 70px; }
+    .hero {
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: stretch;
+      margin-bottom: 24px;
+    }
+    .hero-copy, .health-card, .auth-card, .card {
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(217,229,223,.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero-copy { padding: 34px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-bottom: 12px; padding: 6px 10px; border-radius: 999px;
+      color: var(--brand); background: var(--brand-soft); font-size: .78rem; font-weight: 850;
+    }
+    .hero h1 { margin: 0 0 12px; font-size: clamp(1.7rem, 4vw, 2.75rem); line-height: 1.25; letter-spacing: -.025em; }
+    .hero p { margin: 0; color: var(--muted); }
+    .hero-points { display: grid; gap: 10px; margin-top: 24px; }
+    .hero-point { display: flex; gap: 10px; align-items: flex-start; }
+    .check { flex: 0 0 auto; width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--brand-2); font-size: .8rem; font-weight: 900; }
+    .health-card { padding: 26px; display: flex; flex-direction: column; justify-content: space-between; }
+    .health-title { margin: 0 0 16px; font-size: 1.05rem; }
+    .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .health-item { padding: 13px; border-radius: 13px; background: var(--surface-soft); border: 1px solid var(--line); }
+    .health-label { display: block; color: var(--muted); font-size: .76rem; }
+    .health-value { display: block; margin-top: 4px; font-weight: 850; word-break: break-word; }
+    .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .auth-card { padding: 30px; }
+    .auth-card h2 { margin: 0 0 7px; font-size: 1.32rem; }
+    .auth-card > p { margin: 0 0 23px; color: var(--muted); }
+    .field { margin-bottom: 17px; }
+    .field label { display: block; margin-bottom: 7px; font-weight: 800; font-size: .9rem; }
+    .field-help { margin-top: 5px; color: var(--muted); font-size: .76rem; }
+    .input {
+      width: 100%; min-height: 52px; padding: 12px 14px;
+      color: var(--ink); background: #fff; border: 1px solid #bdcec6; border-radius: 12px;
+      outline: none; transition: .16s ease;
+    }
+    .input:focus { border-color: var(--brand-2); box-shadow: 0 0 0 4px rgba(25,118,90,.12); }
+    .password-row { position: relative; }
+    .password-row .input { padding-right: 76px; }
+    .toggle-password { position: absolute; right: 7px; top: 7px; min-height: 38px; padding: 6px 10px; border: 0; border-radius: 9px; color: var(--brand); background: var(--brand-soft); font-size: .77rem; font-weight: 800; }
+    .primary, .secondary, .danger-button {
+      min-height: 52px; padding: 11px 18px; border-radius: 12px; border: 0; font-weight: 850;
+    }
+    .primary { width: 100%; color: #fff; background: linear-gradient(115deg, var(--brand), var(--brand-2)); box-shadow: 0 9px 20px rgba(15,91,69,.18); }
+    .primary:hover { filter: brightness(1.04); }
+    .primary:disabled, .secondary:disabled { cursor: wait; opacity: .62; }
+    .secondary { color: var(--brand); background: var(--brand-soft); border: 1px solid #bdd8cd; }
+    .danger-button { color: var(--danger); background: var(--danger-soft); border: 1px solid #efc3c0; }
+    .notice { margin-top: 16px; padding: 13px 15px; border-radius: 12px; font-size: .84rem; }
+    .notice.info { color: var(--info); background: var(--info-soft); border: 1px solid #c9dff2; }
+    .notice.warn { color: #72500b; background: var(--warn-soft); border: 1px solid #f2d78c; }
+    .notice.error { color: var(--danger); background: var(--danger-soft); border: 1px solid #f0c7c4; }
+    .notice.success { color: var(--brand); background: var(--brand-soft); border: 1px solid #bfdbd0; }
+    .auth-foot { margin-top: 18px; color: var(--muted); font-size: .78rem; }
+
+    .dashboard-shell { display: grid; grid-template-columns: var(--sidebar) minmax(0,1fr); min-height: calc(100vh - 72px); }
+    .sidebar {
+      position: sticky; top: 72px; height: calc(100vh - 72px); overflow-y: auto;
+      padding: 20px 14px; background: rgba(255,255,255,.97); border-right: 1px solid var(--line);
+    }
+    .company-chip { margin: 0 4px 17px; padding: 14px; border-radius: 14px; background: var(--surface-soft); border: 1px solid var(--line); }
+    .company-name { display: block; font-weight: 900; }
+    .company-sub { display: block; margin-top: 2px; color: var(--muted); font-size: .76rem; }
+    .nav-section { margin: 20px 8px 8px; color: #7a8b84; font-size: .7rem; font-weight: 900; letter-spacing: .08em; }
+    .nav-button {
+      width: 100%; min-height: 46px; display: flex; align-items: center; gap: 11px;
+      margin: 4px 0; padding: 10px 12px; color: #41564e; background: transparent; border: 0; border-radius: 11px; text-align: left; font-weight: 760;
+    }
+    .nav-button:hover { background: var(--surface-soft); }
+    .nav-button.active { color: var(--brand); background: var(--brand-soft); }
+    .nav-button.locked { opacity: .5; }
+    .nav-icon { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: rgba(15,91,69,.08); font-size: .8rem; font-weight: 900; }
+    .sidebar-foot { margin: 22px 4px 0; padding-top: 17px; border-top: 1px solid var(--line); }
+    .session-box { color: var(--muted); font-size: .75rem; }
+
+    .main { min-width: 0; padding: 30px clamp(18px, 3vw, 42px) 70px; }
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+    .page-head h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.2rem); line-height: 1.3; }
+    .page-head p { margin: 7px 0 0; color: var(--muted); }
+    .page-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+    .card { padding: 22px; box-shadow: 0 10px 30px rgba(24,51,42,.065); }
+    .metric-label { color: var(--muted); font-size: .82rem; font-weight: 700; }
+    .metric-value { margin: 6px 0 4px; font-size: clamp(1.7rem, 3vw, 2.35rem); line-height: 1.15; font-weight: 900; letter-spacing: -.03em; }
+    .metric-note { color: var(--muted); font-size: .75rem; }
+    .card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .card-title { margin: 0; font-size: 1.08rem; }
+    .section-space { margin-top: 20px; }
+    .badge { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 9px; border-radius: 999px; font-size: .72rem; font-weight: 850; }
+    .badge.ok { color: var(--brand); background: var(--brand-soft); }
+    .badge.wait { color: var(--warn); background: var(--warn-soft); }
+    .badge.off { color: var(--muted); background: #edf0ef; }
+    .badge.bad { color: var(--danger); background: var(--danger-soft); }
+    .list { display: grid; gap: 10px; }
+    .list-row { display: flex; justify-content: space-between; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid #e8efeb; }
+    .list-row:last-child { border-bottom: 0; }
+    .list-main { min-width: 0; }
+    .list-title { font-weight: 850; }
+    .list-sub { margin-top: 2px; color: var(--muted); font-size: .76rem; word-break: break-word; }
+    .steps { counter-reset: step; display: grid; gap: 11px; }
+    .step { position: relative; padding: 14px 14px 14px 52px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 13px; }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 14px; width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--brand); font-size: .75rem; font-weight: 900; }
+    .step-title { font-weight: 850; }
+    .step-sub { margin-top: 3px; color: var(--muted); font-size: .78rem; }
+    .empty-panel { padding: 42px 22px; text-align: center; color: var(--muted); }
+    .empty-icon { width: 58px; height: 58px; margin: 0 auto 13px; display: grid; place-items: center; border-radius: 18px; background: var(--surface-soft); color: var(--brand); font-size: 1.4rem; font-weight: 900; }
+    .system-table { width: 100%; border-collapse: collapse; }
+    .system-table th, .system-table td { padding: 12px 10px; border-bottom: 1px solid #e6eeea; text-align: left; vertical-align: top; }
+    .system-table th { width: 40%; color: var(--muted); font-size: .8rem; }
+    .system-table td { font-weight: 750; word-break: break-word; }
+    .view { animation: fade .16s ease; }
+    @keyframes fade { from { opacity: .35; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    .toast-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 80; display: grid; gap: 9px; width: min(390px, calc(100vw - 36px)); }
+    .toast { padding: 14px 16px; border-radius: 13px; color: #fff; background: #263b34; box-shadow: 0 12px 30px rgba(0,0,0,.2); font-size: .84rem; animation: toastIn .2s ease; }
+    .toast.error { background: #8d3632; }
+    .toast.success { background: #0f5b45; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .loading-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(244,247,245,.78); backdrop-filter: blur(3px); }
+    .loader-card { min-width: 230px; padding: 24px; border-radius: 16px; background: #fff; box-shadow: var(--shadow); text-align: center; font-weight: 800; }
+    .spinner { width: 34px; height: 34px; margin: 0 auto 12px; border: 4px solid #d7e7df; border-top-color: var(--brand); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .mobile-menu { display: none; }
+
+    @media (max-width: 1050px) {
+      .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .hero { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      .topbar { padding: 11px 14px; }
+      .brand-sub, .status-pill span:last-child { display: none; }
+      .mobile-menu { display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 11px; border: 1px solid rgba(255,255,255,.24); color: #fff; background: rgba(255,255,255,.12); font-weight: 900; }
+      .dashboard-shell { display: block; }
+      .sidebar { position: fixed; z-index: 60; left: 0; top: 68px; width: min(300px, 88vw); height: calc(100vh - 68px); transform: translateX(-104%); transition: transform .2s ease; box-shadow: 18px 0 40px rgba(0,0,0,.15); }
+      .sidebar.open { transform: translateX(0); }
+      .main { padding: 24px 16px 60px; }
+      .auth-grid, .grid-2 { grid-template-columns: 1fr; }
+      .page-head { display: block; }
+      .page-actions { margin-top: 14px; }
+    }
+    @media (max-width: 560px) {
+      body { font-size: 16px; }
+      .preauth-wrap { padding: 24px 14px 48px; }
+      .hero-copy, .health-card, .auth-card, .card { padding: 20px; border-radius: 15px; }
+      .grid-4 { grid-template-columns: 1fr; }
+      .health-grid { grid-template-columns: 1fr; }
+      .top-actions .top-button { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-row">
+        <button id="mobileMenuButton" class="mobile-menu" type="button" aria-label="メニューを開く" hidden>☰</button>
+        <div class="brand-mark">D</div>
+        <div class="brand-copy">
+          <p class="brand-title">DPRO集客ナビ</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-3</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="status-pill" title="Worker APIの接続状態">
+          <span id="topStatusDot" class="status-dot"></span>
+          <span id="topStatusText">確認中</span>
+        </div>
+        <button id="refreshButton" class="top-button" type="button">最新情報に更新</button>
+        <button id="logoutTopButton" class="top-button" type="button" hidden>ログアウト</button>
+      </div>
+    </header>
+
+    <main id="preauthArea" class="preauth-wrap">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">DPRO SHOP 実証運用</div>
+          <h1>検索から相談・契約までを、ひとつの画面で育てる。</h1>
+          <p>Google検索、ホームページ、LINE相談をつなぎ、次に行う改善作業を明確にするDPRO内部管理システムです。</p>
+          <div class="hero-points">
+            <div class="hero-point"><span class="check">✓</span><span>初期キーワード24件を登録済み</span></div>
+            <div class="hero-point"><span class="check">✓</span><span>会社分離・RLS・監査ログを最初から実装</span></div>
+            <div class="hero-point"><span class="check">✓</span><span>Search Console・GA4連携を次STEPで追加可能</span></div>
+          </div>
+        </div>
+        <div class="health-card">
+          <div>
+            <h2 class="health-title">システム接続状態</h2>
+            <div class="health-grid">
+              <div class="health-item"><span class="health-label">Worker API</span><span id="healthApi" class="health-value">確認中</span></div>
+              <div class="health-item"><span class="health-label">データベース</span><span id="healthDb" class="health-value">確認中</span></div>
+              <div class="health-item"><span class="health-label">登録キーワード</span><span id="healthKeywords" class="health-value">―</span></div>
+              <div class="health-item"><span class="health-label">管理者設定</span><span id="healthAdmin" class="health-value">確認中</span></div>
+            </div>
+          </div>
+          <div id="healthMessage" class="notice info">Cloudflare Workerへ接続しています。</div>
+        </div>
+      </section>
+
+      <section class="auth-grid">
+        <article id="activationCard" class="auth-card" hidden>
+          <h2>初期管理者を有効化</h2>
+          <p>初回だけ行います。設定トークンは保存されません。</p>
+          <form id="activationForm" novalidate>
+            <div class="field">
+              <label for="activateUserCode">ユーザーコード</label>
+              <input id="activateUserCode" class="input" name="userCode" value="dpro_admin" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label for="activateDisplayName">表示名</label>
+              <input id="activateDisplayName" class="input" name="displayName" value="DPRO SHOP 管理者" autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="activateEmail">メールアドレス（任意）</label>
+              <input id="activateEmail" class="input" name="email" type="email" autocomplete="email" inputmode="email">
+            </div>
+            <div class="field">
+              <label for="setupToken">初期設定トークン</label>
+              <div class="password-row">
+                <input id="setupToken" class="input" name="setupToken" type="password" autocomplete="off" required>
+                <button class="toggle-password" type="button" data-target="setupToken">表示</button>
+              </div>
+              <div class="field-help">Cloudflareへ登録したINITIAL_SETUP_TOKENを入力します。</div>
+            </div>
+            <div class="field">
+              <label for="activatePassword">新しいパスワード</label>
+              <div class="password-row">
+                <input id="activatePassword" class="input" name="password" type="password" autocomplete="new-password" minlength="12" required>
+                <button class="toggle-password" type="button" data-target="activatePassword">表示</button>
+              </div>
+              <div class="field-help">12文字以上で、大文字・小文字・数字・記号を含めてください。</div>
+            </div>
+            <div class="field">
+              <label for="activatePasswordConfirm">パスワード確認</label>
+              <div class="password-row">
+                <input id="activatePasswordConfirm" class="input" type="password" autocomplete="new-password" minlength="12" required>
+                <button class="toggle-password" type="button" data-target="activatePasswordConfirm">表示</button>
+              </div>
+            </div>
+            <button id="activateButton" class="primary" type="submit">管理者を有効化する</button>
+            <div id="activationMessage" aria-live="polite"></div>
+          </form>
+        </article>
+
+        <article id="loginCard" class="auth-card">
+          <h2>管理画面へログイン</h2>
+          <p>DPRO SHOP管理者のユーザーコードとパスワードを入力してください。</p>
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginUserCode">ユーザーコード</label>
+              <input id="loginUserCode" class="input" name="userCode" value="dpro_admin" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label for="loginPassword">パスワード</label>
+              <div class="password-row">
+                <input id="loginPassword" class="input" name="password" type="password" autocomplete="current-password" required>
+                <button class="toggle-password" type="button" data-target="loginPassword">表示</button>
+              </div>
+            </div>
+            <button id="loginButton" class="primary" type="submit">ログイン</button>
+            <div id="loginMessage" aria-live="polite"></div>
+          </form>
+          <div class="auth-foot">セッションは15分間です。パスワードや設定トークンをこの画面へ保存しません。</div>
+        </article>
+      </section>
+    </main>
+
+    <div id="dashboardArea" class="dashboard-shell" hidden>
+      <aside id="sidebar" class="sidebar">
+        <div class="company-chip">
+          <span id="sidebarCompanyName" class="company-name">DPRO SHOP</span>
+          <span id="sidebarUserName" class="company-sub">管理者</span>
+        </div>
+        <div class="nav-section">集客管理</div>
+        <button class="nav-button active" type="button" data-view="dashboard"><span class="nav-icon">集</span>ダッシュボード</button>
+        <button class="nav-button locked" type="button" data-view="keywords"><span class="nav-icon">語</span>キーワード</button>
+        <button class="nav-button locked" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
+        <button class="nav-button locked" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
+        <div class="nav-section">改善運用</div>
+        <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
+        <button class="nav-button locked" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
+        <button class="nav-button locked" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
+        <div class="nav-section">システム</div>
+        <button class="nav-button" type="button" data-view="integrations"><span class="nav-icon">連</span>連携設定</button>
+        <button class="nav-button" type="button" data-view="system"><span class="nav-icon">設</span>システム状態</button>
+        <div class="sidebar-foot">
+          <div class="session-box">セッション期限<br><strong id="sessionRemaining">―</strong></div>
+          <button id="logoutSideButton" class="danger-button" style="width:100%;margin-top:13px" type="button">ログアウト</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section id="view-dashboard" class="view">
+          <div class="page-head">
+            <div>
+              <h1>集客ダッシュボード</h1>
+              <p id="dashboardGreeting">DPRO SHOPの現在の準備状況を確認できます。</p>
+            </div>
+            <div class="page-actions">
+              <button id="dashboardRefreshButton" class="secondary" type="button">データを更新</button>
+            </div>
+          </div>
+
+          <div class="grid-4">
+            <article class="card"><div class="metric-label">登録キーワード</div><div id="metricKeywords" class="metric-value">―</div><div class="metric-note">初期登録済みの目標キーワード</div></article>
+            <article class="card"><div class="metric-label">稼働サイト</div><div id="metricSites" class="metric-value">―</div><div class="metric-note">DPRO SHOP管理対象サイト</div></article>
+            <article class="card"><div class="metric-label">接続済み連携</div><div id="metricIntegrations" class="metric-value">―</div><div class="metric-note">Google等の外部サービス</div></article>
+            <article class="card"><div class="metric-label">システム状態</div><div id="metricSystem" class="metric-value" style="font-size:1.55rem">確認中</div><div id="metricSystemNote" class="metric-note">WorkerとDBを確認しています</div></article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">外部連携</h2><span id="integrationSummaryBadge" class="badge wait">未接続</span></div>
+              <div id="dashboardIntegrations" class="list"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">次に行う作業</h2><span class="badge wait">準備段階</span></div>
+              <div class="steps">
+                <div class="step"><div class="step-title">Search Consoleを接続</div><div class="step-sub">実際に表示された検索語・クリック数・平均掲載順位を取り込みます。</div></div>
+                <div class="step"><div class="step-title">GA4と相談ボタンを計測</div><div class="step-sub">検索からLINE相談・問い合わせまでの流れをつなぎます。</div></div>
+                <div class="step"><div class="step-title">地域・サービスページを改善</div><div class="step-sub">取得した数値をもとに毎週3件以内の改善作業へ絞ります。</div></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">管理サイト</h2><span id="siteCountBadge" class="badge ok">―</span></div>
+              <div id="siteList" class="list"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">利用可能機能</h2><span class="badge ok">会社別設定</span></div>
+              <div id="featureFlagList" class="list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-integrations" class="view" hidden>
+          <div class="page-head"><div><h1>連携設定</h1><p>Googleサービス等の接続準備状態を確認します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">Google準備状況を確認</button></div></div>
+          <article class="card">
+            <div class="card-title-row"><h2 class="card-title">接続サービス</h2><span id="oauthBadge" class="badge wait">OAuth未設定</span></div>
+            <div id="integrationList" class="list"></div>
+            <div id="readinessMessage" class="notice info">Google OAuthの接続開始はSHUKYAKU-5以降で有効になります。</div>
+          </article>
+        </section>
+
+        <section id="view-system" class="view" hidden>
+          <div class="page-head"><div><h1>システム状態</h1><p>Worker、Supabase、セッション、安全設定を確認します。</p></div><div class="page-actions"><button id="systemRefreshButton" class="secondary" type="button">再確認</button></div></div>
+          <article class="card">
+            <div class="card-title-row"><h2 class="card-title">稼働情報</h2><span id="systemStatusBadge" class="badge wait">確認中</span></div>
+            <div style="overflow-x:auto"><table class="system-table"><tbody id="systemTableBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="view-locked" class="view" hidden>
+          <div class="page-head"><div><h1 id="lockedTitle">準備中の機能</h1><p>データ取得APIの追加後に利用できるようになります。</p></div></div>
+          <article class="card empty-panel">
+            <div class="empty-icon">＋</div>
+            <h2 id="lockedHeading">次のSTEPで有効化します</h2>
+            <p id="lockedDescription">SHUKYAKU-4以降で機能を追加します。</p>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
+  <div id="loadingOverlay" class="loading-overlay" hidden><div class="loader-card"><div class="spinner"></div><span id="loadingText">処理しています</span></div></div>
+
+  <script>
+    'use strict';
+
+    const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
+    const APP_VERSION = 'SHUKYAKU-3-OWNER-20260805';
+    const SESSION_KEY = 'dpro_shukyaku_session_v1';
+
+    const state = {
+      health: null,
+      bootstrap: null,
+      token: '',
+      expiresAt: '',
+      currentView: 'dashboard',
+      sessionTimer: null,
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindEvents();
+      restoreSession();
+      refreshHealth().then(() => {
+        if (state.token) tryResumeSession();
+      });
+      updateJapanTime();
+      setInterval(updateJapanTime, 30000);
+    });
+
+    function bindEvents() {
+      $('refreshButton').addEventListener('click', handleGlobalRefresh);
+      $('dashboardRefreshButton').addEventListener('click', refreshBootstrap);
+      $('systemRefreshButton').addEventListener('click', refreshHealth);
+      $('readinessButton').addEventListener('click', loadGoogleReadiness);
+      $('activationForm').addEventListener('submit', handleActivation);
+      $('loginForm').addEventListener('submit', handleLogin);
+      $('logoutTopButton').addEventListener('click', logout);
+      $('logoutSideButton').addEventListener('click', logout);
+      $('mobileMenuButton').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+
+      document.querySelectorAll('.toggle-password').forEach((button) => {
+        button.addEventListener('click', () => {
+          const input = $(button.dataset.target);
+          const show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          button.textContent = show ? '隠す' : '表示';
+        });
+      });
+
+      document.querySelectorAll('.nav-button').forEach((button) => {
+        button.addEventListener('click', () => switchView(button.dataset.view, button));
+      });
+
+      window.addEventListener('online', () => refreshHealth());
+      window.addEventListener('offline', () => setTopStatus(false, 'オフライン'));
+    }
+
+    async function handleGlobalRefresh() {
+      if (state.token) {
+        await Promise.allSettled([refreshHealth(), refreshBootstrap()]);
+      } else {
+        await refreshHealth();
+      }
+    }
+
+    async function refreshHealth() {
+      setTopStatus(null, '確認中');
+      try {
+        const data = await api('/health', { auth: false, timeout: 15000 });
+        state.health = data;
+        renderHealth(data);
+        return data;
+      } catch (error) {
+        state.health = null;
+        renderHealthError(error);
+        throw error;
+      }
+    }
+
+    function renderHealth(data) {
+      const ok = data && data.ok === true;
+      setTopStatus(ok, ok ? '正常稼働' : '要確認');
+      $('healthApi').textContent = ok ? '正常' : '要確認';
+      $('healthDb').textContent = data.dbOk ? '正常' : '要確認';
+      $('healthKeywords').textContent = String(data.database?.targetKeywordCount ?? '―');
+      $('healthAdmin').textContent = data.adminActivationRequired ? '初期設定が必要' : '有効化済み';
+      $('healthMessage').className = `notice ${ok ? 'success' : 'warn'}`;
+      $('healthMessage').textContent = ok
+        ? 'Worker・Supabase・安全設定は正常です。'
+        : '一部の設定を確認してください。システム状態で詳細を確認できます。';
+      $('activationCard').hidden = !data.adminActivationRequired;
+      if (data.adminActivationRequired) $('loginCard').querySelector('p').textContent = '初期管理者の有効化後にログインできます。';
+      renderSystemTable();
+    }
+
+    function renderHealthError(error) {
+      setTopStatus(false, '接続失敗');
+      $('healthApi').textContent = '接続失敗';
+      $('healthDb').textContent = '未確認';
+      $('healthKeywords').textContent = '―';
+      $('healthAdmin').textContent = '未確認';
+      $('healthMessage').className = 'notice error';
+      $('healthMessage').textContent = error.message || 'Worker APIへ接続できません。';
+    }
+
+    async function handleActivation(event) {
+      event.preventDefault();
+      clearMessage('activationMessage');
+      const userCode = $('activateUserCode').value.trim();
+      const displayName = $('activateDisplayName').value.trim();
+      const email = $('activateEmail').value.trim();
+      const setupToken = $('setupToken').value;
+      const password = $('activatePassword').value;
+      const confirm = $('activatePasswordConfirm').value;
+
+      if (!userCode || !setupToken || !password) return showMessage('activationMessage', '必須項目を入力してください。', 'error');
+      if (password !== confirm) return showMessage('activationMessage', '確認用パスワードが一致しません。', 'error');
+      if (!isStrongPassword(password)) return showMessage('activationMessage', '12文字以上で、大文字・小文字・数字・記号を含めてください。', 'error');
+
+      setLoading(true, '管理者を有効化しています');
+      $('activateButton').disabled = true;
+      try {
+        await api('/api/admin/activate', {
+          method: 'POST', auth: false,
+          headers: { 'X-DPRO-SETUP-TOKEN': setupToken },
+          body: { userCode, displayName, email: email || null, password },
+        });
+        $('setupToken').value = '';
+        $('activatePassword').value = '';
+        $('activatePasswordConfirm').value = '';
+        $('loginUserCode').value = userCode;
+        showMessage('activationMessage', '管理者を有効化しました。設定したパスワードでログインしてください。', 'success');
+        toast('管理者の初期設定が完了しました。', 'success');
+        await refreshHealth();
+        $('loginPassword').focus();
+      } catch (error) {
+        showMessage('activationMessage', error.message, 'error');
+      } finally {
+        $('activateButton').disabled = false;
+        setLoading(false);
+      }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      clearMessage('loginMessage');
+      const userCode = $('loginUserCode').value.trim();
+      const password = $('loginPassword').value;
+      if (!userCode || !password) return showMessage('loginMessage', 'ユーザーコードとパスワードを入力してください。', 'error');
+
+      setLoading(true, 'ログインしています');
+      $('loginButton').disabled = true;
+      try {
+        const data = await api('/api/auth/login', { method: 'POST', auth: false, body: { userCode, password } });
+        setSession(data.sessionToken, data.expiresAt);
+        $('loginPassword').value = '';
+        await refreshBootstrap();
+        showDashboard();
+        toast('ログインしました。', 'success');
+      } catch (error) {
+        showMessage('loginMessage', error.message, 'error');
+      } finally {
+        $('loginButton').disabled = false;
+        setLoading(false);
+      }
+    }
+
+    async function tryResumeSession() {
+      setLoading(true, 'セッションを確認しています');
+      try {
+        await api('/api/auth/me');
+        await refreshBootstrap();
+        showDashboard();
+      } catch (error) {
+        clearSession();
+        showPreauth();
+        if (error.code !== 'authentication_required') toast('セッションが終了しました。再度ログインしてください。', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function refreshBootstrap() {
+      if (!state.token) return;
+      const data = await api('/api/bootstrap');
+      state.bootstrap = data;
+      renderBootstrap(data);
+      return data;
+    }
+
+    function renderBootstrap(data) {
+      const companyName = data.company?.company_name || 'DPRO SHOP';
+      const userName = data.user?.displayName || data.user?.display_name || '管理者';
+      $('sidebarCompanyName').textContent = companyName;
+      $('sidebarUserName').textContent = userName;
+      $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
+      $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
+      $('metricSites').textContent = String(data.summary?.activeSiteCount ?? 0);
+      const connected = (data.integrations || []).filter((item) => item.connection_status === 'connected').length;
+      $('metricIntegrations').textContent = `${connected}/${(data.integrations || []).length}`;
+      $('metricSystem').textContent = state.health?.ok ? '正常稼働' : '要確認';
+      $('metricSystemNote').textContent = state.health?.ok ? 'Worker・DB接続済み' : 'システム状態を確認してください';
+      renderIntegrations(data.integrations || []);
+      renderSites(data.sites || []);
+      renderFeatureFlags(data.featureFlags || []);
+      renderSystemTable();
+    }
+
+    function renderIntegrations(items) {
+      const targets = [$('dashboardIntegrations'), $('integrationList')];
+      const html = items.length ? items.map((item) => {
+        const meta = integrationMeta(item.provider);
+        const status = connectionMeta(item.connection_status);
+        const lastSync = item.last_sync_at ? formatJapanDate(item.last_sync_at) : '同期履歴なし';
+        return `<div class="list-row"><div class="list-main"><div class="list-title">${escapeHtml(meta.label)}</div><div class="list-sub">${escapeHtml(meta.description)}・${escapeHtml(lastSync)}</div></div><span class="badge ${status.className}">${escapeHtml(status.label)}</span></div>`;
+      }).join('') : '<div class="empty-panel">連携設定がありません。</div>';
+      targets.forEach((target) => { if (target) target.innerHTML = html; });
+      const connected = items.filter((item) => item.connection_status === 'connected').length;
+      $('integrationSummaryBadge').textContent = connected ? `${connected}件接続済み` : '未接続';
+      $('integrationSummaryBadge').className = `badge ${connected ? 'ok' : 'wait'}`;
+    }
+
+    function renderSites(sites) {
+      $('siteCountBadge').textContent = `${sites.length}サイト`;
+      $('siteList').innerHTML = sites.length ? sites.map((site) => `
+        <div class="list-row"><div class="list-main"><div class="list-title">${escapeHtml(site.site_name || site.site_code)}</div><div class="list-sub">${escapeHtml(site.base_url || 'URL未設定')}</div></div><span class="badge ${site.status === 'active' ? 'ok' : 'off'}">${site.status === 'active' ? '稼働中' : escapeHtml(site.status || '未設定')}</span></div>
+      `).join('') : '<div class="empty-panel">稼働サイトがありません。</div>';
+    }
+
+    function renderFeatureFlags(flags) {
+      $('featureFlagList').innerHTML = flags.length ? flags.map((flag) => `
+        <div class="list-row"><div class="list-main"><div class="list-title">${escapeHtml(featureLabel(flag.feature_key))}</div><div class="list-sub">${escapeHtml(flag.feature_key)}</div></div><span class="badge ${flag.enabled ? 'ok' : 'off'}">${flag.enabled ? '利用可能' : '停止中'}</span></div>
+      `).join('') : '<div class="empty-panel">機能設定がありません。</div>';
+    }
+
+    async function loadGoogleReadiness() {
+      setLoading(true, 'Google連携準備を確認しています');
+      try {
+        const data = await api('/api/oauth/google/readiness');
+        $('oauthBadge').textContent = data.configured ? 'OAuth準備済み' : 'OAuth未設定';
+        $('oauthBadge').className = `badge ${data.configured ? 'ok' : 'wait'}`;
+        const missing = Object.entries(data.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
+        $('readinessMessage').className = `notice ${data.configured ? 'success' : 'warn'}`;
+        $('readinessMessage').textContent = data.configured
+          ? 'Google OAuth用のCloudflare設定は準備済みです。接続処理はSHUKYAKU-5で有効化します。'
+          : `未登録：${missing.join('、') || 'Google OAuth設定'}。SHUKYAKU-5で登録します。`;
+      } catch (error) {
+        toast(error.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function renderSystemTable() {
+      if (!$('systemTableBody')) return;
+      const h = state.health;
+      const rows = [
+        ['システムコード', h?.systemCode || 'SHUKYAKU'],
+        ['管理画面バージョン', APP_VERSION],
+        ['Workerバージョン', h?.version || '未確認'],
+        ['システム状態', h?.status === 'healthy' ? '正常稼働' : '要確認'],
+        ['データベース接続', h?.dbOk ? '正常' : '要確認'],
+        ['DBバージョン', h?.databaseVersion || '未確認'],
+        ['不足テーブル', String(h?.database?.missingTables?.length ?? '未確認')],
+        ['RLS無効', String(h?.database?.rlsDisabled?.length ?? '未確認')],
+        ['RLS強制漏れ', String(h?.database?.rlsNotForced?.length ?? '未確認')],
+        ['登録キーワード', String(h?.database?.targetKeywordCount ?? '未確認')],
+        ['環境', h?.environment || 'production'],
+        ['タイムゾーン', h?.timezone || 'Asia/Tokyo'],
+        ['セッション期限', `${h?.sessionTtlSeconds || 900}秒`],
+        ['CORS制限', h?.corsRestricted ? '有効' : '要確認'],
+        ['service_role非公開', h?.serviceRoleHidden ? '確認済み' : '要確認'],
+        ['Google OAuth', h?.googleOauthPrepared ? '準備済み' : '未設定（現段階では正常）'],
+        ['最終確認', h?.checkedAt ? formatJapanDate(h.checkedAt) : '未確認'],
+      ];
+      $('systemTableBody').innerHTML = rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('');
+      const ok = Boolean(h?.ok);
+      $('systemStatusBadge').textContent = ok ? '正常' : '要確認';
+      $('systemStatusBadge').className = `badge ${ok ? 'ok' : 'bad'}`;
+    }
+
+    function switchView(view, button) {
+      document.querySelectorAll('.nav-button').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      $('sidebar').classList.remove('open');
+
+      const ready = ['dashboard', 'integrations', 'system'];
+      document.querySelectorAll('.view').forEach((section) => section.hidden = true);
+      if (ready.includes(view)) {
+        $(`view-${view}`).hidden = false;
+        state.currentView = view;
+        if (view === 'system') renderSystemTable();
+        return;
+      }
+
+      const info = lockedViewMeta(view);
+      $('lockedTitle').textContent = info.title;
+      $('lockedHeading').textContent = info.heading;
+      $('lockedDescription').textContent = info.description;
+      $('view-locked').hidden = false;
+      state.currentView = 'locked';
+    }
+
+    function lockedViewMeta(view) {
+      const map = {
+        keywords: { title: 'キーワード管理', heading: 'SHUKYAKU-4で有効化', description: '初期24キーワードの一覧、分類、優先度、対象ページ、改善状態を管理します。' },
+        pages: { title: 'ページ管理', heading: 'SHUKYAKU-4で有効化', description: 'DPRO SHOPのページと対象地域・サービス・キーワードを関連付けます。' },
+        conversions: { title: 'アクセス・問い合わせ', heading: 'SHUKYAKU-6で有効化', description: 'GA4、LINE相談クリック、フォーム送信、商談をつなぎます。' },
+        maps: { title: 'Googleマップ', heading: 'SHUKYAKU-8で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
+        tasks: { title: '改善タスク', heading: 'SHUKYAKU-4で有効化', description: '改善理由、優先度、作業前後の数値、結果を管理します。' },
+        reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
+      };
+      return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
+    }
+
+    function showDashboard() {
+      $('preauthArea').hidden = true;
+      $('dashboardArea').hidden = false;
+      $('logoutTopButton').hidden = false;
+      $('mobileMenuButton').hidden = false;
+      startSessionTimer();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function showPreauth() {
+      $('preauthArea').hidden = false;
+      $('dashboardArea').hidden = true;
+      $('logoutTopButton').hidden = true;
+      $('mobileMenuButton').hidden = true;
+      if (state.sessionTimer) clearInterval(state.sessionTimer);
+    }
+
+    async function logout() {
+      setLoading(true, 'ログアウトしています');
+      try {
+        if (state.token) await api('/api/auth/logout', { method: 'POST' });
+      } catch (_) {
+        // サーバー側で失敗しても端末上のセッションは破棄する。
+      } finally {
+        clearSession();
+        state.bootstrap = null;
+        showPreauth();
+        setLoading(false);
+        toast('ログアウトしました。', 'success');
+      }
+    }
+
+    function setSession(token, expiresAt) {
+      state.token = token || '';
+      state.expiresAt = expiresAt || '';
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token: state.token, expiresAt: state.expiresAt }));
+      startSessionTimer();
+    }
+
+    function restoreSession() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+        if (saved.token && saved.expiresAt && Date.parse(saved.expiresAt) > Date.now()) {
+          state.token = saved.token;
+          state.expiresAt = saved.expiresAt;
+        } else {
+          sessionStorage.removeItem(SESSION_KEY);
+        }
+      } catch (_) {
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+    }
+
+    function clearSession() {
+      state.token = '';
+      state.expiresAt = '';
+      sessionStorage.removeItem(SESSION_KEY);
+      if (state.sessionTimer) clearInterval(state.sessionTimer);
+      $('sessionRemaining').textContent = '―';
+    }
+
+    function startSessionTimer() {
+      if (state.sessionTimer) clearInterval(state.sessionTimer);
+      const tick = () => {
+        const remaining = Date.parse(state.expiresAt) - Date.now();
+        if (!state.expiresAt || remaining <= 0) {
+          clearSession();
+          showPreauth();
+          toast('セッションの有効期限が切れました。', 'error');
+          return;
+        }
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        $('sessionRemaining').textContent = `${minutes}分${String(seconds).padStart(2, '0')}秒`;
+      };
+      tick();
+      state.sessionTimer = setInterval(tick, 1000);
+    }
+
+    async function api(path, options = {}) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), options.timeout || 20000);
+      const headers = new Headers(options.headers || {});
+      headers.set('Accept', 'application/json');
+      if (options.body !== undefined) headers.set('Content-Type', 'application/json');
+      if (options.auth !== false && state.token) headers.set('Authorization', `Bearer ${state.token}`);
+      headers.set('X-Request-ID', crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+
+      try {
+        const response = await fetch(`${API_BASE}${path}`, {
+          method: options.method || 'GET',
+          headers,
+          body: options.body === undefined ? undefined : JSON.stringify(options.body),
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const text = await response.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : {}; } catch (_) { data = { message: text || '応答を読み取れませんでした。' }; }
+        if (!response.ok) {
+          const error = new Error(data.message || data.error || `APIエラー（${response.status}）`);
+          error.code = data.code || 'api_error';
+          error.status = response.status;
+          error.details = data.details;
+          if (response.status === 401 && options.auth !== false) {
+            clearSession();
+            showPreauth();
+          }
+          throw error;
+        }
+        return data;
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          const timeoutError = new Error('通信がタイムアウトしました。時間をおいて再度お試しください。');
+          timeoutError.code = 'timeout';
+          throw timeoutError;
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    function setTopStatus(ok, text) {
+      $('topStatusText').textContent = text;
+      $('topStatusDot').className = `status-dot${ok === true ? ' ok' : ok === false ? ' bad' : ''}`;
+    }
+
+    function setLoading(show, text = '処理しています') {
+      $('loadingText').textContent = text;
+      $('loadingOverlay').hidden = !show;
+    }
+
+    function showMessage(targetId, message, type) {
+      const target = $(targetId);
+      target.innerHTML = `<div class="notice ${type}">${escapeHtml(message)}</div>`;
+    }
+
+    function clearMessage(targetId) { $(targetId).innerHTML = ''; }
+
+    function toast(message, type = '') {
+      const node = document.createElement('div');
+      node.className = `toast ${type}`;
+      node.textContent = message;
+      $('toastWrap').appendChild(node);
+      setTimeout(() => node.remove(), 4200);
+    }
+
+    function isStrongPassword(value) {
+      return value.length >= 12 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
+    }
+
+    function integrationMeta(provider) {
+      const map = {
+        search_console: { label: 'Google Search Console', description: '検索語・表示回数・クリック・平均掲載順位' },
+        ga4: { label: 'Google Analytics 4', description: 'アクセス・行動・相談ボタン・問い合わせ' },
+        business_profile: { label: 'Googleビジネスプロフィール', description: 'マップ情報・投稿・写真・口コミ' },
+        pagespeed: { label: 'PageSpeed Insights', description: '表示速度・モバイル品質・SEO基本診断' },
+        google_ads: { label: 'Google広告', description: '実証後に追加する広告分析オプション' },
+      };
+      return map[provider] || { label: provider || '不明な連携', description: '外部サービス連携' };
+    }
+
+    function connectionMeta(status) {
+      const map = {
+        connected: { label: '接続済み', className: 'ok' },
+        pending: { label: '設定中', className: 'wait' },
+        error: { label: '要確認', className: 'bad' },
+        not_connected: { label: '未接続', className: 'off' },
+      };
+      return map[status] || { label: status || '未接続', className: 'off' };
+    }
+
+    function featureLabel(key) {
+      const map = {
+        search_console: 'Search Console連携', ga4: 'GA4連携', business_profile: 'Googleマップ管理',
+        page_audit: 'ページ診断', keyword_management: 'キーワード管理', conversion_tracking: '問い合わせ計測',
+        recommendations: '改善提案', weekly_report: '週次レポート', monthly_report: '月次レポート',
+        google_ads: 'Google広告分析', multi_location: '複数店舗管理'
+      };
+      return map[key] || key.replaceAll('_', ' ');
+    }
+
+    function formatJapanDate(value) {
+      try {
+        return new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+      } catch (_) { return String(value || ''); }
+    }
+
+    function updateJapanTime() {
+      document.documentElement.dataset.japanTime = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit' }).format(new Date());
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+    }
+  </script>
+</body>
+</html>
