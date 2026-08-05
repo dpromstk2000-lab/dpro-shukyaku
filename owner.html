@@ -216,6 +216,40 @@
     .spinner { width: 34px; height: 34px; margin: 0 auto 12px; border: 4px solid #d7e7df; border-top-color: var(--brand); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .mobile-menu { display: none; }
+    .management-toolbar { display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px; }
+    .filter-group { display:flex; gap:9px; flex-wrap:wrap; align-items:center; flex:1 1 520px; }
+    .compact-input, .compact-select { min-height:44px; padding:9px 12px; border:1px solid #bdcec6; border-radius:10px; background:#fff; color:var(--ink); outline:none; }
+    .compact-input { min-width:240px; flex:1 1 260px; }
+    .compact-select { min-width:150px; }
+    .table-wrap { width:100%; overflow:auto; border:1px solid var(--line); border-radius:14px; }
+    .data-table { width:100%; min-width:900px; border-collapse:collapse; background:#fff; }
+    .data-table th, .data-table td { padding:13px 12px; border-bottom:1px solid #e5ede9; text-align:left; vertical-align:top; }
+    .data-table th { position:sticky; top:0; z-index:1; color:var(--muted); background:#f6f9f7; font-size:.76rem; white-space:nowrap; }
+    .data-table td { font-size:.86rem; }
+    .data-table tr:last-child td { border-bottom:0; }
+    .table-main { font-weight:850; }
+    .table-sub { margin-top:3px; color:var(--muted); font-size:.73rem; max-width:420px; overflow:hidden; text-overflow:ellipsis; }
+    .row-actions { display:flex; gap:7px; white-space:nowrap; }
+    .mini-button { min-height:36px; padding:6px 10px; border-radius:9px; border:1px solid #bdd2c8; color:var(--brand); background:#fff; font-size:.75rem; font-weight:800; }
+    .mini-button:hover { background:var(--brand-soft); }
+    .mini-button.delete { color:var(--danger); border-color:#efc3c0; }
+    .mini-button.delete:hover { background:var(--danger-soft); }
+    .priority-mark { display:inline-grid; place-items:center; min-width:30px; height:30px; border-radius:9px; background:var(--surface-soft); font-weight:900; }
+    .summary-strip { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+    .summary-item { padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-soft); }
+    .summary-item span { display:block; color:var(--muted); font-size:.74rem; }
+    .summary-item strong { display:block; margin-top:2px; font-size:1.25rem; }
+    .modal-backdrop { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:18px; background:rgba(15,33,27,.52); backdrop-filter:blur(3px); }
+    .modal-panel { width:min(760px,100%); max-height:calc(100vh - 36px); overflow:auto; padding:24px; border-radius:18px; background:#fff; box-shadow:0 24px 70px rgba(0,0,0,.26); }
+    .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .modal-head h2 { margin:0; font-size:1.35rem; }
+    .modal-close { width:42px; height:42px; border:0; border-radius:11px; background:#edf3f0; color:var(--ink); font-weight:900; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .form-grid .field.full { grid-column:1 / -1; }
+    .textarea { min-height:110px; resize:vertical; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+    .modal-actions .primary { width:auto; min-width:150px; }
+    .text-link { color:var(--brand); text-decoration:underline; text-underline-offset:3px; word-break:break-all; }
 
     @media (max-width: 1050px) {
       .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -230,6 +264,9 @@
       .sidebar.open { transform: translateX(0); }
       .main { padding: 24px 16px 60px; }
       .auth-grid, .grid-2 { grid-template-columns: 1fr; }
+      .summary-strip { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .form-grid { grid-template-columns:1fr; }
+      .form-grid .field.full { grid-column:auto; }
       .page-head { display: block; }
       .page-actions { margin-top: 14px; }
     }
@@ -238,6 +275,8 @@
       .preauth-wrap { padding: 24px 14px 48px; }
       .hero-copy, .health-card, .auth-card, .card { padding: 20px; border-radius: 15px; }
       .grid-4 { grid-template-columns: 1fr; }
+      .summary-strip { grid-template-columns:1fr; }
+      .compact-input, .compact-select { min-width:100%; width:100%; }
       .health-grid { grid-template-columns: 1fr; }
       .top-actions .top-button { display: none; }
     }
@@ -251,7 +290,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-3-R1</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-4</p>
         </div>
       </div>
       <div class="top-actions">
@@ -366,12 +405,12 @@
         </div>
         <div class="nav-section">集客管理</div>
         <button class="nav-button active" type="button" data-view="dashboard"><span class="nav-icon">集</span>ダッシュボード</button>
-        <button class="nav-button locked" type="button" data-view="keywords"><span class="nav-icon">語</span>キーワード</button>
-        <button class="nav-button locked" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
+        <button class="nav-button" type="button" data-view="keywords"><span class="nav-icon">語</span>キーワード</button>
+        <button class="nav-button" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
         <button class="nav-button locked" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
         <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
-        <button class="nav-button locked" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
+        <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
         <button class="nav-button locked" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
         <div class="nav-section">システム</div>
         <button class="nav-button" type="button" data-view="integrations"><span class="nav-icon">連</span>連携設定</button>
@@ -428,6 +467,63 @@
           </div>
         </section>
 
+        <section id="view-keywords" class="view" hidden>
+          <div class="page-head">
+            <div><h1>キーワード管理</h1><p>地域・サービス・業種ごとの目標キーワードを整理します。</p></div>
+            <div class="page-actions"><button id="addKeywordButton" class="secondary" type="button">キーワードを追加</button></div>
+          </div>
+          <div id="keywordSummary" class="summary-strip"></div>
+          <article class="card">
+            <div class="management-toolbar">
+              <div class="filter-group">
+                <input id="keywordSearch" class="compact-input" type="search" placeholder="キーワード・地域・サービスで検索">
+                <select id="keywordStatusFilter" class="compact-select"><option value="">すべての状態</option></select>
+                <select id="keywordPriorityFilter" class="compact-select"><option value="">すべての優先度</option><option value="1">優先度1</option><option value="2">優先度2</option><option value="3">優先度3</option><option value="4">優先度4</option><option value="5">優先度5</option></select>
+              </div>
+              <span id="keywordCountBadge" class="badge ok">0件</span>
+            </div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>キーワード</th><th>地域・サービス</th><th>検索目的</th><th>優先度</th><th>状態</th><th>操作</th></tr></thead><tbody id="keywordTableBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="view-pages" class="view" hidden>
+          <div class="page-head">
+            <div><h1>ページ管理</h1><p>DPRO SHOPの集客ページとGoogle登録状態を管理します。</p></div>
+            <div class="page-actions"><button id="addPageButton" class="secondary" type="button">ページを追加</button></div>
+          </div>
+          <div id="pageSummary" class="summary-strip"></div>
+          <article class="card">
+            <div class="management-toolbar">
+              <div class="filter-group">
+                <input id="pageSearch" class="compact-input" type="search" placeholder="ページ名・URLで検索">
+                <select id="pageStatusFilter" class="compact-select"><option value="">すべての公開状態</option></select>
+                <select id="pageIndexFilter" class="compact-select"><option value="">すべてのGoogle状態</option></select>
+              </div>
+              <span id="pageCountBadge" class="badge ok">0件</span>
+            </div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>ページ</th><th>種別</th><th>公開状態</th><th>Google登録</th><th>更新日</th><th>操作</th></tr></thead><tbody id="pageTableBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="view-tasks" class="view" hidden>
+          <div class="page-head">
+            <div><h1>改善タスク</h1><p>次に行う作業を絞り、完了後の効果測定へつなげます。</p></div>
+            <div class="page-actions"><button id="addTaskButton" class="secondary" type="button">改善タスクを追加</button></div>
+          </div>
+          <div id="taskSummary" class="summary-strip"></div>
+          <article class="card">
+            <div class="management-toolbar">
+              <div class="filter-group">
+                <input id="taskSearch" class="compact-input" type="search" placeholder="タスク名・理由で検索">
+                <select id="taskStatusFilter" class="compact-select"><option value="">すべての状態</option></select>
+                <select id="taskPriorityFilter" class="compact-select"><option value="">すべての優先度</option><option value="1">優先度1</option><option value="2">優先度2</option><option value="3">優先度3</option><option value="4">優先度4</option><option value="5">優先度5</option></select>
+              </div>
+              <span id="taskCountBadge" class="badge ok">0件</span>
+            </div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>改善タスク</th><th>対象</th><th>優先度</th><th>期限</th><th>状態</th><th>操作</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
+          </article>
+        </section>
+
         <section id="view-integrations" class="view" hidden>
           <div class="page-head"><div><h1>連携設定</h1><p>Googleサービス等の接続準備状態を確認します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">Google準備状況を確認</button></div></div>
           <article class="card">
@@ -457,6 +553,13 @@
     </div>
   </div>
 
+  <div id="editorModal" class="modal-backdrop" hidden>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+      <div class="modal-head"><div><h2 id="editorTitle">編集</h2><p id="editorSubtitle" style="margin:5px 0 0;color:var(--muted);font-size:.84rem"></p></div><button id="editorCloseButton" class="modal-close" type="button" aria-label="閉じる">×</button></div>
+      <form id="editorForm" novalidate><div id="editorFields" class="form-grid"></div><div id="editorMessage"></div><div class="modal-actions"><button id="editorCancelButton" class="secondary" type="button">キャンセル</button><button id="editorSaveButton" class="primary" type="submit">保存する</button></div></form>
+    </section>
+  </div>
+
   <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
   <div id="loadingOverlay" class="loading-overlay" hidden><div class="loader-card"><div class="spinner"></div><span id="loadingText">処理しています</span></div></div>
 
@@ -464,7 +567,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-3-R1-OWNER-20260805';
+    const APP_VERSION = 'SHUKYAKU-4-OWNER-20260805';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -474,6 +577,12 @@
       expiresAt: '',
       currentView: 'dashboard',
       sessionTimer: null,
+      keywords: [],
+      pages: [],
+      tasks: [],
+      managementSummary: null,
+      loadedViews: new Set(),
+      editor: { type: '', id: '' },
     };
 
     const $ = (id) => document.getElementById(id);
@@ -498,6 +607,22 @@
       $('logoutTopButton').addEventListener('click', logout);
       $('logoutSideButton').addEventListener('click', logout);
       $('mobileMenuButton').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+      $('addKeywordButton').addEventListener('click', () => openEditor('keyword'));
+      $('addPageButton').addEventListener('click', () => openEditor('page'));
+      $('addTaskButton').addEventListener('click', () => openEditor('task'));
+      $('editorCloseButton').addEventListener('click', closeEditor);
+      $('editorCancelButton').addEventListener('click', closeEditor);
+      $('editorForm').addEventListener('submit', saveEditor);
+      $('editorModal').addEventListener('click', (event) => { if (event.target === $('editorModal')) closeEditor(); });
+      $('keywordSearch').addEventListener('input', renderKeywords);
+      $('keywordStatusFilter').addEventListener('change', renderKeywords);
+      $('keywordPriorityFilter').addEventListener('change', renderKeywords);
+      $('pageSearch').addEventListener('input', renderPages);
+      $('pageStatusFilter').addEventListener('change', renderPages);
+      $('pageIndexFilter').addEventListener('change', renderPages);
+      $('taskSearch').addEventListener('input', renderTasks);
+      $('taskStatusFilter').addEventListener('change', renderTasks);
+      $('taskPriorityFilter').addEventListener('change', renderTasks);
 
       document.querySelectorAll('.toggle-password').forEach((button) => {
         button.addEventListener('click', () => {
@@ -752,12 +877,13 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'pages', 'tasks', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
         state.currentView = view;
         if (view === 'system') renderSystemTable();
+        if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
         return;
       }
 
@@ -771,15 +897,233 @@
 
     function lockedViewMeta(view) {
       const map = {
-        keywords: { title: 'キーワード管理', heading: 'SHUKYAKU-4で有効化', description: '初期24キーワードの一覧、分類、優先度、対象ページ、改善状態を管理します。' },
-        pages: { title: 'ページ管理', heading: 'SHUKYAKU-4で有効化', description: 'DPRO SHOPのページと対象地域・サービス・キーワードを関連付けます。' },
-        conversions: { title: 'アクセス・問い合わせ', heading: 'SHUKYAKU-6で有効化', description: 'GA4、LINE相談クリック、フォーム送信、商談をつなぎます。' },
+                conversions: { title: 'アクセス・問い合わせ', heading: 'SHUKYAKU-6で有効化', description: 'GA4、LINE相談クリック、フォーム送信、商談をつなぎます。' },
         maps: { title: 'Googleマップ', heading: 'SHUKYAKU-8で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
-        tasks: { title: '改善タスク', heading: 'SHUKYAKU-4で有効化', description: '改善理由、優先度、作業前後の数値、結果を管理します。' },
-        reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
+                reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
       };
       return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
     }
+
+
+    const KEYWORD_STATUS_OPTIONS = [
+      ['researching','調査中'],['planned','対策予定'],['page_building','ページ制作中'],['published','公開済み'],['collecting','データ蓄積中'],['improving','改善中'],['validated','成果確認'],['paused','保留'],['excluded','対象外']
+    ];
+    const SEARCH_INTENT_OPTIONS = [['','未設定'],['informational','情報収集'],['comparison','比較検討'],['vendor_search','制作会社を探している'],['price','料金を調べている'],['implementation','導入を検討している'],['system_search','システムを探している'],['other','その他']];
+    const PAGE_TYPE_OPTIONS = [['home','トップページ'],['service','サービス'],['region','地域'],['industry','業種別'],['product','製品紹介'],['price','料金'],['case_study','事例'],['faq','FAQ'],['article','コラム'],['contact','問い合わせ'],['other','その他']];
+    const PAGE_STATUS_OPTIONS = [['draft','下書き'],['published','公開中'],['paused','停止中'],['archived','保管済み']];
+    const INDEX_STATUS_OPTIONS = [['unknown','未確認'],['submitted','登録申請済み'],['indexed','Google登録済み'],['not_indexed','未登録'],['blocked','ブロック'],['error','エラー']];
+    const TASK_STATUS_OPTIONS = [['todo','未着手'],['doing','対応中'],['waiting_publish','公開待ち'],['measuring','効果測定中'],['done','完了'],['paused','保留'],['excluded','対象外']];
+
+    async function loadManagementView(view, force = false) {
+      if (!state.token) return;
+      if (!force && state.loadedViews.has(view)) {
+        if (view === 'keywords') renderKeywords();
+        if (view === 'pages') renderPages();
+        if (view === 'tasks') renderTasks();
+        return;
+      }
+      setLoading(true, `${viewLabel(view)}を読み込んでいます`);
+      try {
+        if (view === 'keywords') state.keywords = (await api('/api/keywords')).items || [];
+        if (view === 'pages') state.pages = (await api('/api/pages')).items || [];
+        if (view === 'tasks') {
+          const [taskData] = await Promise.all([
+            api('/api/tasks'),
+            state.loadedViews.has('keywords') ? Promise.resolve() : api('/api/keywords').then((d) => { state.keywords = d.items || []; state.loadedViews.add('keywords'); }),
+            state.loadedViews.has('pages') ? Promise.resolve() : api('/api/pages').then((d) => { state.pages = d.items || []; state.loadedViews.add('pages'); }),
+          ]);
+          state.tasks = taskData.items || [];
+        }
+        state.managementSummary = (await api('/api/management/summary')).summary || {};
+        state.loadedViews.add(view);
+        populateManagementFilters();
+        if (view === 'keywords') renderKeywords();
+        if (view === 'pages') renderPages();
+        if (view === 'tasks') renderTasks();
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function populateManagementFilters() {
+      fillSelectOnce('keywordStatusFilter', KEYWORD_STATUS_OPTIONS, 'すべての状態');
+      fillSelectOnce('pageStatusFilter', PAGE_STATUS_OPTIONS, 'すべての公開状態');
+      fillSelectOnce('pageIndexFilter', INDEX_STATUS_OPTIONS, 'すべてのGoogle状態');
+      fillSelectOnce('taskStatusFilter', TASK_STATUS_OPTIONS, 'すべての状態');
+    }
+
+    function fillSelectOnce(id, options, firstLabel) {
+      const select = $(id);
+      const current = select.value;
+      select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>${options.map(([value,label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join('')}`;
+      select.value = current;
+    }
+
+    function renderKeywords() {
+      const search = $('keywordSearch').value.trim().toLowerCase();
+      const status = $('keywordStatusFilter').value;
+      const priority = $('keywordPriorityFilter').value;
+      const items = state.keywords.filter((item) => {
+        const hay = [item.keyword,item.region_name,item.service_name,item.industry_name,item.notes].join(' ').toLowerCase();
+        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority);
+      });
+      $('keywordCountBadge').textContent = `${items.length}件`;
+      const s = state.managementSummary || {};
+      $('keywordSummary').innerHTML = summaryItems([
+        ['登録キーワード', s.keywordCount ?? state.keywords.length],['公開・測定中', s.publishedKeywordCount ?? 0],['重要キーワード', s.highPriorityKeywordCount ?? 0],['現在の表示', items.length]
+      ]);
+      $('keywordTableBody').innerHTML = items.length ? items.map((item) => `
+        <tr><td><div class="table-main">${escapeHtml(item.keyword)}</div><div class="table-sub">${escapeHtml(item.notes || 'メモなし')}</div></td>
+        <td>${escapeHtml([item.region_name,item.service_name,item.industry_name].filter(Boolean).join('／') || '未分類')}</td>
+        <td>${escapeHtml(optionLabel(SEARCH_INTENT_OPTIONS,item.search_intent,'未設定'))}</td>
+        <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
+        <td><span class="badge ${keywordStatusBadge(item.status)}">${escapeHtml(optionLabel(KEYWORD_STATUS_OPTIONS,item.status,item.status))}</span></td>
+        <td><div class="row-actions"><button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('keyword','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('keyword','${item.id}')">削除</button></div></td></tr>`).join('') : emptyTableRow(6, '条件に合うキーワードがありません。');
+    }
+
+    function renderPages() {
+      const search = $('pageSearch').value.trim().toLowerCase();
+      const status = $('pageStatusFilter').value;
+      const indexStatus = $('pageIndexFilter').value;
+      const items = state.pages.filter((item) => {
+        const hay = [item.page_name,item.page_url,item.page_code].join(' ').toLowerCase();
+        return (!search || hay.includes(search)) && (!status || item.status === status) && (!indexStatus || item.indexing_status === indexStatus);
+      });
+      $('pageCountBadge').textContent = `${items.length}件`;
+      const sm = state.managementSummary || {};
+      $('pageSummary').innerHTML = summaryItems([
+        ['登録ページ', sm.pageCount ?? state.pages.length],['公開中', sm.publishedPageCount ?? 0],['Google登録済み', sm.indexedPageCount ?? 0],['現在の表示', items.length]
+      ]);
+      $('pageTableBody').innerHTML = items.length ? items.map((item) => `
+        <tr><td><div class="table-main">${escapeHtml(item.page_name)}</div><div class="table-sub"><a class="text-link" href="${escapeHtml(item.page_url)}" target="_blank" rel="noopener">${escapeHtml(item.page_url)}</a></div></td>
+        <td>${escapeHtml(optionLabel(PAGE_TYPE_OPTIONS,item.page_type,item.page_type))}</td>
+        <td><span class="badge ${item.status === 'published' ? 'ok' : item.status === 'draft' ? 'wait' : 'off'}">${escapeHtml(optionLabel(PAGE_STATUS_OPTIONS,item.status,item.status))}</span></td>
+        <td><span class="badge ${indexBadge(item.indexing_status)}">${escapeHtml(optionLabel(INDEX_STATUS_OPTIONS,item.indexing_status,item.indexing_status))}</span></td>
+        <td>${escapeHtml(formatJapanDate(item.updated_at))}</td>
+        <td><div class="row-actions"><button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('page','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('page','${item.id}')">削除</button></div></td></tr>`).join('') : emptyTableRow(6, '登録ページがありません。');
+    }
+
+    function renderTasks() {
+      const search = $('taskSearch').value.trim().toLowerCase();
+      const status = $('taskStatusFilter').value;
+      const priority = $('taskPriorityFilter').value;
+      const items = state.tasks.filter((item) => {
+        const hay = [item.title,item.reason,item.recommended_action,item.description].join(' ').toLowerCase();
+        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority);
+      });
+      $('taskCountBadge').textContent = `${items.length}件`;
+      const sm = state.managementSummary || {};
+      $('taskSummary').innerHTML = summaryItems([
+        ['登録タスク', sm.taskCount ?? state.tasks.length],['未完了', sm.openTaskCount ?? 0],['完了', sm.completedTaskCount ?? 0],['期限超過', sm.overdueTaskCount ?? 0]
+      ]);
+      $('taskTableBody').innerHTML = items.length ? items.map((item) => {
+        const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword;
+        const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name;
+        return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
+        <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
+        <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
+        <td>${escapeHtml(item.due_date || '未設定')}</td>
+        <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
+        <td><div class="row-actions"><button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
+      }).join('') : emptyTableRow(6, '条件に合う改善タスクがありません。');
+    }
+
+    function summaryItems(items) { return items.map(([label,value]) => `<div class="summary-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join(''); }
+    function emptyTableRow(columns, text) { return `<tr><td colspan="${columns}"><div class="empty-panel">${escapeHtml(text)}</div></td></tr>`; }
+    function optionLabel(options, value, fallback='') { return options.find(([key]) => key === value)?.[1] || fallback; }
+    function keywordStatusBadge(status) { return ['validated','published','collecting'].includes(status) ? 'ok' : ['researching','planned','page_building','improving'].includes(status) ? 'wait' : 'off'; }
+    function indexBadge(status) { return status === 'indexed' ? 'ok' : ['submitted','unknown'].includes(status) ? 'wait' : status === 'error' ? 'bad' : 'off'; }
+    function taskStatusBadge(status) { return status === 'done' ? 'ok' : ['todo','doing','waiting_publish','measuring'].includes(status) ? 'wait' : 'off'; }
+    function viewLabel(view) { return ({keywords:'キーワード',pages:'ページ',tasks:'改善タスク'})[view] || 'データ'; }
+
+    function openEditor(type, item = null) {
+      state.editor = { type, id: item?.id || '' };
+      $('editorTitle').textContent = `${item ? '編集' : '新規登録'}：${type === 'keyword' ? 'キーワード' : type === 'page' ? 'ページ' : '改善タスク'}`;
+      $('editorSubtitle').textContent = type === 'keyword' ? '検索されたい言葉を、地域・サービス・目的と一緒に管理します。' : type === 'page' ? '公開ページとGoogle登録状態を管理します。' : '実行する作業を具体的に登録します。';
+      $('editorFields').innerHTML = type === 'keyword' ? keywordEditorFields(item) : type === 'page' ? pageEditorFields(item) : taskEditorFields(item);
+      $('editorMessage').innerHTML = '';
+      $('editorModal').hidden = false;
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => $('editorFields').querySelector('input,select,textarea')?.focus(), 0);
+    }
+
+    function closeEditor() {
+      $('editorModal').hidden = true;
+      $('editorFields').innerHTML = '';
+      $('editorMessage').innerHTML = '';
+      document.body.style.overflow = '';
+      state.editor = { type: '', id: '' };
+    }
+
+    function keywordEditorFields(item={}) {
+      return `${field('キーワード','keyword',item.keyword || '',true,'text','full')}${field('地域','regionName',item.region_name || '')}${field('サービス','serviceName',item.service_name || '')}${field('業種','industryName',item.industry_name || '')}${selectField('検索目的','searchIntent',SEARCH_INTENT_OPTIONS,item.search_intent || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',KEYWORD_STATUS_OPTIONS,item.status || 'researching')}${textareaField('メモ','notes',item.notes || '','full')}`;
+    }
+
+    function pageEditorFields(item={}) {
+      return `${field('ページ名','pageName',item.page_name || '',true,'text','full')}${field('ページコード','pageCode',item.page_code || '',true)}${selectField('ページ種別','pageType',PAGE_TYPE_OPTIONS,item.page_type || 'service')}${field('ページURL','pageUrl',item.page_url || '',true,'url','full')}${selectField('公開状態','status',PAGE_STATUS_OPTIONS,item.status || 'draft')}${selectField('Google登録状態','indexingStatus',INDEX_STATUS_OPTIONS,item.indexing_status || 'unknown')}`;
+    }
+
+    function taskEditorFields(item={}) {
+      const keywordOptions = [['','対象なし'],...state.keywords.map((x) => [x.id,x.keyword])];
+      const pageOptions = [['','対象なし'],...state.pages.map((x) => [x.id,x.page_name])];
+      return `${field('タスク名','title',item.title || '',true,'text','full')}${selectField('対象キーワード','targetKeywordId',keywordOptions,item.target_keyword_id || '')}${selectField('対象ページ','landingPageId',pageOptions,item.landing_page_id || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',TASK_STATUS_OPTIONS,item.status || 'todo')}${field('期限','dueDate',item.due_date || '',false,'date')}${textareaField('改善理由','reason',item.reason || '','full')}${textareaField('推奨作業','recommendedAction',item.recommended_action || '','full')}`;
+    }
+
+    function field(label,name,value,required=false,type='text',extra='') { return `<div class="field ${extra}"><label>${escapeHtml(label)}${required ? ' <span style="color:var(--danger)">必須</span>' : ''}</label><input class="input" name="${escapeHtml(name)}" type="${escapeHtml(type)}" value="${escapeHtml(value)}" ${required ? 'required' : ''}></div>`; }
+    function textareaField(label,name,value,extra='') { return `<div class="field ${extra}"><label>${escapeHtml(label)}</label><textarea class="input textarea" name="${escapeHtml(name)}">${escapeHtml(value)}</textarea></div>`; }
+    function selectField(label,name,options,value,extra='') { return `<div class="field ${extra}"><label>${escapeHtml(label)}</label><select class="input" name="${escapeHtml(name)}">${options.map(([key,text]) => `<option value="${escapeHtml(key)}" ${String(key) === String(value) ? 'selected' : ''}>${escapeHtml(text)}</option>`).join('')}</select></div>`; }
+
+    async function saveEditor(event) {
+      event.preventDefault();
+      const form = new FormData($('editorForm'));
+      const payload = Object.fromEntries(form.entries());
+      if ('priority' in payload) payload.priority = Number(payload.priority);
+      const { type, id } = state.editor;
+      const base = type === 'keyword' ? '/api/keywords' : type === 'page' ? '/api/pages' : '/api/tasks';
+      $('editorSaveButton').disabled = true;
+      setLoading(true, '保存しています');
+      try {
+        await api(id ? `${base}/${id}` : base, { method: id ? 'PATCH' : 'POST', body: payload });
+        closeEditor();
+        const view = type === 'keyword' ? 'keywords' : type === 'page' ? 'pages' : 'tasks';
+        state.loadedViews.delete(view);
+        await loadManagementView(view, true);
+        if (state.bootstrap) await refreshBootstrap();
+        toast('保存しました。', 'success');
+      } catch (error) {
+        showMessage('editorMessage', error.message, 'error');
+      } finally {
+        $('editorSaveButton').disabled = false;
+        setLoading(false);
+      }
+    }
+
+    async function deleteManagementItem(type, id) {
+      const collection = type === 'keyword' ? state.keywords : type === 'page' ? state.pages : state.tasks;
+      const item = collection.find((x) => x.id === id);
+      const name = type === 'keyword' ? item?.keyword : type === 'page' ? item?.page_name : item?.title;
+      if (!item || !confirm(`「${name || 'このデータ'}」を削除しますか？`)) return;
+      const base = type === 'keyword' ? '/api/keywords' : type === 'page' ? '/api/pages' : '/api/tasks';
+      setLoading(true, '削除しています');
+      try {
+        await api(`${base}/${id}`, { method:'DELETE' });
+        const view = type === 'keyword' ? 'keywords' : type === 'page' ? 'pages' : 'tasks';
+        state.loadedViews.delete(view);
+        await loadManagementView(view, true);
+        if (state.bootstrap) await refreshBootstrap();
+        toast('削除しました。', 'success');
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    window.SHUKYAKU = {
+      edit(type,id) {
+        const collection = type === 'keyword' ? state.keywords : type === 'page' ? state.pages : state.tasks;
+        const item = collection.find((x) => x.id === id);
+        if (item) openEditor(type,item);
+      },
+      remove(type,id) { deleteManagementItem(type,id); },
+    };
 
     function showDashboard() {
       $('preauthArea').hidden = true;
@@ -807,6 +1151,7 @@
       } finally {
         clearSession();
         state.bootstrap = null;
+        state.keywords = []; state.pages = []; state.tasks = []; state.loadedViews.clear();
         showPreauth();
         setLoading(false);
         toast('ログアウトしました。', 'success');
