@@ -280,6 +280,20 @@
       .health-grid { grid-template-columns: 1fr; }
       .top-actions .top-button { display: none; }
     }
+  
+    .gsc-control-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }
+    .gsc-action-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .gsc-action-row .secondary, .gsc-action-row .danger-button { min-height:44px; }
+    .gsc-property { display:grid; gap:8px; }
+    .gsc-property select { width:100%; min-height:50px; padding:10px 12px; border:1px solid #bdcec6; border-radius:12px; background:#fff; color:var(--ink); }
+    .metric-compact { font-size:1.7rem; font-weight:900; line-height:1.15; margin:6px 0 3px; }
+    .gsc-table-title { max-width:440px; white-space:normal; word-break:break-word; }
+    .sync-form { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end; }
+    .sync-form .field { margin:0; }
+    .sync-form .secondary { min-height:52px; }
+    @media (max-width: 900px) { .gsc-control-grid { grid-template-columns:1fr; } .sync-form { grid-template-columns:1fr 1fr; } .sync-form .secondary { grid-column:1/-1; } }
+    @media (max-width: 620px) { .sync-form { grid-template-columns:1fr; } .sync-form .secondary { grid-column:auto; } }
+
   </style>
 </head>
 <body>
@@ -406,6 +420,7 @@
         <div class="nav-section">集客管理</div>
         <button class="nav-button active" type="button" data-view="dashboard"><span class="nav-icon">集</span>ダッシュボード</button>
         <button class="nav-button" type="button" data-view="keywords"><span class="nav-icon">語</span>キーワード</button>
+        <button class="nav-button" type="button" data-view="search-console"><span class="nav-icon">検</span>検索データ</button>
         <button class="nav-button" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
         <button class="nav-button locked" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
@@ -524,12 +539,67 @@
           </article>
         </section>
 
+        <section id="view-search-console" class="view" hidden>
+          <div class="page-head">
+            <div><h1>Google検索データ</h1><p>実際に表示された検索語、クリック数、表示回数、平均掲載順位を確認します。</p></div>
+            <div class="page-actions"><button id="gscRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+          <div class="grid-4">
+            <article class="card"><div class="metric-label">表示回数</div><div id="gscImpressions" class="metric-value">―</div><div class="metric-note">選択期間の検索表示</div></article>
+            <article class="card"><div class="metric-label">クリック数</div><div id="gscClicks" class="metric-value">―</div><div class="metric-note">検索結果からの訪問</div></article>
+            <article class="card"><div class="metric-label">クリック率</div><div id="gscCtr" class="metric-value">―</div><div class="metric-note">クリック数 ÷ 表示回数</div></article>
+            <article class="card"><div class="metric-label">平均掲載順位</div><div id="gscPosition" class="metric-value">―</div><div class="metric-note">保存データによる参考平均</div></article>
+          </div>
+          <div id="gscDataMessage" class="notice info section-space">Search Consoleを接続し、プロパティを選択してください。</div>
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">上位の検索語</h2><span id="gscQueryBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>検索語</th><th>表示</th><th>クリック</th><th>順位</th></tr></thead><tbody id="gscQueryTable"></tbody></table></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">上位のページ</h2><span id="gscPageBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>ページ</th><th>表示</th><th>クリック</th><th>順位</th></tr></thead><tbody id="gscPageTable"></tbody></table></div>
+            </article>
+          </div>
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">同期履歴</h2><span id="gscLastSyncBadge" class="badge off">未同期</span></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>期間</th><th>状態</th><th>件数</th><th>完了日時</th></tr></thead><tbody id="gscSyncTable"></tbody></table></div>
+          </article>
+        </section>
+
         <section id="view-integrations" class="view" hidden>
-          <div class="page-head"><div><h1>連携設定</h1><p>Googleサービス等の接続準備状態を確認します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">Google準備状況を確認</button></div></div>
-          <article class="card">
+          <div class="page-head"><div><h1>連携設定</h1><p>Google Search Consoleを安全に接続し、取得対象を選択します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">設定を再確認</button></div></div>
+          <div class="gsc-control-grid">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">Search Console接続</h2><span id="gscConnectionBadge" class="badge wait">未接続</span></div>
+              <p id="gscConnectionText" style="margin:0 0 16px;color:var(--muted)">Google Cloud設定後に接続できます。</p>
+              <div class="gsc-action-row">
+                <button id="gscConnectButton" class="secondary" type="button">Googleと接続</button>
+                <button id="gscDisconnectButton" class="danger-button" type="button" hidden>接続を解除</button>
+              </div>
+              <div id="gscConnectionMessage"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">取得するプロパティ</h2><span id="gscPropertyBadge" class="badge off">未選択</span></div>
+              <div class="gsc-property">
+                <select id="gscPropertySelect" disabled><option value="">接続後に選択できます</option></select>
+                <button id="gscPropertySaveButton" class="secondary" type="button" disabled>このプロパティを使用</button>
+              </div>
+            </article>
+          </div>
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">検索データを同期</h2><span id="gscSyncBadge" class="badge off">未同期</span></div>
+            <div class="sync-form">
+              <div class="field"><label for="gscDateFrom">開始日</label><input id="gscDateFrom" class="input" type="date"></div>
+              <div class="field"><label for="gscDateTo">終了日</label><input id="gscDateTo" class="input" type="date"></div>
+              <button id="gscSyncButton" class="secondary" type="button" disabled>同期を実行</button>
+            </div>
+            <div class="field-help" style="margin-top:10px">初回は約28日分を取得します。日次同期は3日前の確定データを取得します。</div>
+          </article>
+          <article class="card section-space">
             <div class="card-title-row"><h2 class="card-title">接続サービス</h2><span id="oauthBadge" class="badge wait">OAuth未設定</span></div>
             <div id="integrationList" class="list"></div>
-            <div id="readinessMessage" class="notice info">Google OAuthの接続開始はSHUKYAKU-5以降で有効になります。</div>
+            <div id="readinessMessage" class="notice info">Google CloudとCloudflareの設定を確認してください。</div>
           </article>
         </section>
 
@@ -567,7 +637,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-4-OWNER-20260805';
+    const APP_VERSION = 'SHUKYAKU-5-OWNER-20260805';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -580,6 +650,7 @@
       keywords: [],
       pages: [],
       tasks: [],
+      searchConsole: { status: null, properties: [], summary: null },
       managementSummary: null,
       loadedViews: new Set(),
       editor: { type: '', id: '' },
@@ -589,6 +660,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       bindEvents();
+      setDefaultGscDates();
       restoreSession();
       refreshHealth().then(() => {
         if (state.token) tryResumeSession();
@@ -602,6 +674,11 @@
       $('dashboardRefreshButton').addEventListener('click', refreshBootstrap);
       $('systemRefreshButton').addEventListener('click', refreshHealth);
       $('readinessButton').addEventListener('click', loadGoogleReadiness);
+      $('gscConnectButton').addEventListener('click', startGoogleConnection);
+      $('gscDisconnectButton').addEventListener('click', disconnectGoogleSearchConsole);
+      $('gscPropertySaveButton').addEventListener('click', saveSearchConsoleProperty);
+      $('gscSyncButton').addEventListener('click', syncSearchConsole);
+      $('gscRefreshButton').addEventListener('click', () => loadSearchConsoleView(true));
       $('activationForm').addEventListener('submit', handleActivation);
       $('loginForm').addEventListener('submit', handleLogin);
       $('logoutTopButton').addEventListener('click', logout);
@@ -749,6 +826,7 @@
         $('loginPassword').value = '';
         await refreshBootstrap();
         showDashboard();
+        await handleOAuthReturn();
         toast('ログインしました。', 'success');
       } catch (error) {
         showMessage('loginMessage', error.message, 'error');
@@ -764,6 +842,7 @@
         await api('/api/auth/me');
         await refreshBootstrap();
         showDashboard();
+        await handleOAuthReturn();
       } catch (error) {
         clearSession();
         showPreauth();
@@ -827,22 +906,199 @@
     }
 
     async function loadGoogleReadiness() {
-      setLoading(true, 'Google連携準備を確認しています');
+      setLoading(true, 'Google連携設定を確認しています');
       try {
-        const data = await api('/api/oauth/google/readiness');
-        $('oauthBadge').textContent = data.configured ? 'OAuth準備済み' : 'OAuth未設定';
-        $('oauthBadge').className = `badge ${data.configured ? 'ok' : 'wait'}`;
-        const missing = Object.entries(data.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
-        $('readinessMessage').className = `notice ${data.configured ? 'success' : 'warn'}`;
-        $('readinessMessage').textContent = data.configured
-          ? 'Google OAuth用のCloudflare設定は準備済みです。接続処理はSHUKYAKU-5で有効化します。'
-          : `未登録：${missing.join('、') || 'Google OAuth設定'}。SHUKYAKU-5で登録します。`;
+        const [readiness, status] = await Promise.all([
+          api('/api/oauth/google/readiness'),
+          api('/api/search-console/status'),
+        ]);
+        state.searchConsole.status = status;
+        $('oauthBadge').textContent = readiness.configured ? 'OAuth準備済み' : 'OAuth未設定';
+        $('oauthBadge').className = `badge ${readiness.configured ? 'ok' : 'wait'}`;
+        const missing = Object.entries(readiness.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
+        $('readinessMessage').className = `notice ${readiness.configured ? 'success' : 'warn'}`;
+        $('readinessMessage').textContent = readiness.configured
+          ? `Google OAuth設定は準備済みです。リダイレクトURI：${readiness.redirectUri || '未確認'}`
+          : `未登録：${missing.join('、') || 'Google OAuth設定'}`;
+        renderSearchConsoleConnection(status, readiness.configured);
+        if (status.integration?.connectionStatus === 'connected' || status.integration?.connectionStatus === 'error') {
+          await loadSearchConsoleProperties();
+        }
       } catch (error) {
         toast(error.message, 'error');
       } finally {
         setLoading(false);
       }
     }
+
+    function renderSearchConsoleConnection(status, configured = state.health?.googleOauthPrepared) {
+      const connection = status?.integration?.connectionStatus || 'not_connected';
+      const meta = connectionMeta(connection);
+      $('gscConnectionBadge').textContent = meta.label;
+      $('gscConnectionBadge').className = `badge ${meta.className}`;
+      $('gscConnectButton').disabled = !configured;
+      $('gscConnectButton').textContent = connection === 'connected' ? 'Googleへ再接続' : 'Googleと接続';
+      $('gscDisconnectButton').hidden = !['connected','error','pending'].includes(connection);
+      $('gscConnectionText').textContent = !configured
+        ? 'CloudflareへGoogle Client ID、Client Secret、Redirect URIを登録してください。'
+        : connection === 'connected'
+          ? `接続済み${status.selectedProperty ? `・${status.selectedProperty}` : '・プロパティを選択してください'}`
+          : connection === 'error'
+            ? `接続エラー：${status.integration?.lastErrorMessage || '再接続してください。'}`
+            : 'GoogleアカウントでSearch Consoleの読み取りを許可します。';
+      $('gscSyncButton').disabled = !(connection === 'connected' && status.selectedProperty);
+      $('gscPropertyBadge').textContent = status.selectedProperty ? '選択済み' : '未選択';
+      $('gscPropertyBadge').className = `badge ${status.selectedProperty ? 'ok' : 'off'}`;
+    }
+
+    async function startGoogleConnection() {
+      setLoading(true, 'Google接続画面を準備しています');
+      try {
+        const data = await api('/api/oauth/google/start');
+        if (!data.authUrl) throw new Error('Google接続URLを取得できませんでした。');
+        window.location.assign(data.authUrl);
+      } catch (error) {
+        showMessage('gscConnectionMessage', error.message, 'error');
+        setLoading(false);
+      }
+    }
+
+    async function handleOAuthReturn() {
+      const params = new URLSearchParams(location.search);
+      const result = params.get('gsc');
+      if (!result) return;
+      history.replaceState({}, document.title, location.pathname);
+      const button = document.querySelector('[data-view="integrations"]');
+      if (button) switchView('integrations', button);
+      if (result === 'connected') {
+        toast('Google Search Consoleを接続しました。取得するプロパティを選択してください。', 'success');
+        await loadGoogleReadiness();
+      } else {
+        const code = params.get('code') || 'google_callback_failed';
+        toast(`Google接続に失敗しました（${code}）。設定を確認してください。`, 'error');
+        await loadGoogleReadiness().catch(() => {});
+      }
+    }
+
+    async function loadSearchConsoleProperties() {
+      try {
+        const data = await api('/api/search-console/properties');
+        state.searchConsole.properties = data.properties || [];
+        const select = $('gscPropertySelect');
+        select.innerHTML = '<option value="">プロパティを選択</option>' + state.searchConsole.properties.map((item) =>
+          `<option value="${escapeHtml(item.siteUrl)}"${item.selected ? ' selected' : ''}>${escapeHtml(item.siteUrl)}（${escapeHtml(permissionLabel(item.permissionLevel))}）</option>`
+        ).join('');
+        select.disabled = !state.searchConsole.properties.length;
+        $('gscPropertySaveButton').disabled = !state.searchConsole.properties.length;
+        if (data.selectedProperty) select.value = data.selectedProperty;
+      } catch (error) {
+        $('gscPropertySelect').innerHTML = '<option value="">プロパティを取得できません</option>';
+        $('gscPropertySelect').disabled = true;
+        $('gscPropertySaveButton').disabled = true;
+        showMessage('gscConnectionMessage', error.message, 'error');
+      }
+    }
+
+    async function saveSearchConsoleProperty() {
+      const propertyUrl = $('gscPropertySelect').value;
+      if (!propertyUrl) return toast('取得するプロパティを選択してください。', 'error');
+      setLoading(true, 'プロパティを保存しています');
+      try {
+        await api('/api/search-console/property', { method: 'POST', body: { propertyUrl } });
+        toast('取得するSearch Consoleプロパティを保存しました。', 'success');
+        await Promise.all([loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function syncSearchConsole() {
+      const dateFrom = $('gscDateFrom').value;
+      const dateTo = $('gscDateTo').value;
+      if (!dateFrom || !dateTo) return toast('同期期間を入力してください。', 'error');
+      setLoading(true, 'Search Consoleデータを取得しています');
+      try {
+        const data = await api('/api/search-console/sync', { method: 'POST', body: { dateFrom, dateTo }, timeout: 120000 });
+        toast(`${data.rowCount || 0}件の検索データを同期しました。`, 'success');
+        await Promise.all([loadSearchConsoleView(true), loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function disconnectGoogleSearchConsole() {
+      if (!confirm('Google Search Consoleとの接続を解除しますか？保存済みの検索データは残ります。')) return;
+      setLoading(true, 'Google接続を解除しています');
+      try {
+        await api('/api/search-console/disconnect', { method: 'DELETE' });
+        state.searchConsole = { status: null, properties: [], summary: null };
+        toast('Google Search Consoleとの接続を解除しました。', 'success');
+        await Promise.all([loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function loadSearchConsoleView(force = false) {
+      if (!state.token) return;
+      if (!force && state.searchConsole.summary) return renderSearchConsoleSummary(state.searchConsole.summary);
+      setLoading(true, '検索データを読み込んでいます');
+      try {
+        const [status, summary] = await Promise.all([
+          api('/api/search-console/status'),
+          api('/api/search-console/summary?days=28'),
+        ]);
+        state.searchConsole.status = status;
+        state.searchConsole.summary = summary;
+        renderSearchConsoleSummary(summary);
+      } catch (error) {
+        $('gscDataMessage').className = 'notice error section-space';
+        $('gscDataMessage').textContent = error.message;
+      } finally { setLoading(false); }
+    }
+
+    function renderSearchConsoleSummary(data) {
+      const totals = data.totals || {};
+      $('gscImpressions').textContent = formatNumber(totals.impressions || 0);
+      $('gscClicks').textContent = formatNumber(totals.clicks || 0);
+      $('gscCtr').textContent = formatPercent(totals.ctr);
+      $('gscPosition').textContent = formatPosition(totals.averagePosition);
+      const connected = data.connectionStatus === 'connected';
+      $('gscDataMessage').className = `notice ${connected ? (data.rowCount ? 'success' : 'info') : 'warn'} section-space`;
+      $('gscDataMessage').textContent = !connected
+        ? 'Search Consoleは未接続です。連携設定からGoogleと接続してください。'
+        : !data.selectedProperty
+          ? '取得するSearch Consoleプロパティを選択してください。'
+          : data.rowCount
+            ? `${data.dateFrom}〜${data.dateTo}の保存データを表示しています。最終同期：${data.lastSyncAt ? formatJapanDate(data.lastSyncAt) : '未確認'}`
+            : '検索データがまだありません。連携設定から初回同期を実行してください。';
+      renderGscTable('gscQueryTable', data.topQueries || [], 'query');
+      renderGscTable('gscPageTable', data.topPages || [], 'pageUrl');
+      $('gscQueryBadge').textContent = `${(data.topQueries || []).length}件`;
+      $('gscPageBadge').textContent = `${(data.topPages || []).length}件`;
+      $('gscQueryBadge').className = `badge ${(data.topQueries || []).length ? 'ok' : 'off'}`;
+      $('gscPageBadge').className = `badge ${(data.topPages || []).length ? 'ok' : 'off'}`;
+      const runs = data.syncRuns || [];
+      $('gscSyncTable').innerHTML = runs.length ? runs.map((run) => `<tr><td>${escapeHtml(run.date_from)}〜${escapeHtml(run.date_to)}</td><td><span class="badge ${run.status === 'success' ? 'ok' : run.status === 'failed' ? 'bad' : 'wait'}">${escapeHtml(syncStatusLabel(run.status))}</span></td><td>${formatNumber(run.row_count || 0)}</td><td>${run.completed_at ? escapeHtml(formatJapanDate(run.completed_at)) : '処理中'}</td></tr>`).join('') : '<tr><td colspan="4"><div class="empty-panel">同期履歴はありません。</div></td></tr>';
+      $('gscLastSyncBadge').textContent = data.lastSyncAt ? formatJapanDate(data.lastSyncAt) : '未同期';
+      $('gscLastSyncBadge').className = `badge ${data.lastSyncAt ? 'ok' : 'off'}`;
+    }
+
+    function renderGscTable(targetId, rows, key) {
+      $(targetId).innerHTML = rows.length ? rows.map((row) => `<tr><td class="gsc-table-title">${escapeHtml(row[key] || '―')}</td><td>${formatNumber(row.impressions || 0)}</td><td>${formatNumber(row.clicks || 0)}</td><td>${formatPosition(row.averagePosition)}</td></tr>`).join('') : '<tr><td colspan="4"><div class="empty-panel">表示できるデータがありません。</div></td></tr>';
+    }
+
+    function permissionLabel(value) {
+      const map = { siteOwner:'所有者', siteFullUser:'フルユーザー', siteRestrictedUser:'制限付きユーザー', siteUnverifiedUser:'未確認' };
+      return map[value] || value || '権限不明';
+    }
+
+    function syncStatusLabel(value) {
+      const map = { queued:'待機中', running:'処理中', success:'成功', partial:'一部成功', failed:'失敗', cancelled:'中止' };
+      return map[value] || value || '不明';
+    }
+
+    function formatNumber(value) { return new Intl.NumberFormat('ja-JP').format(Number(value || 0)); }
+    function formatPercent(value) { return `${(Number(value || 0) * 100).toFixed(1)}%`; }
+    function formatPosition(value) { return Number.isFinite(Number(value)) ? Number(value).toFixed(1) : '―'; }
+
 
     function renderSystemTable() {
       if (!$('systemTableBody')) return;
@@ -877,12 +1133,14 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'pages', 'tasks', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'pages', 'tasks', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
         state.currentView = view;
         if (view === 'system') renderSystemTable();
+        if (view === 'integrations') loadGoogleReadiness().catch((error) => toast(error.message, 'error'));
+        if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
         return;
       }
@@ -1151,7 +1409,7 @@
       } finally {
         clearSession();
         state.bootstrap = null;
-        state.keywords = []; state.pages = []; state.tasks = []; state.loadedViews.clear();
+        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.loadedViews.clear();
         showPreauth();
         setLoading(false);
         toast('ログアウトしました。', 'success');
@@ -1314,6 +1572,13 @@
       try {
         return new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
       } catch (_) { return String(value || ''); }
+    }
+
+    function setDefaultGscDates() {
+      const end = new Date(); end.setDate(end.getDate() - 3);
+      const start = new Date(); start.setDate(start.getDate() - 30);
+      $('gscDateFrom').value = start.toISOString().slice(0,10);
+      $('gscDateTo').value = end.toISOString().slice(0,10);
     }
 
     function updateJapanTime() {
