@@ -251,7 +251,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-3</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-3-R1</p>
         </div>
       </div>
       <div class="top-actions">
@@ -318,15 +318,15 @@
             <div class="field">
               <label for="activatePassword">新しいパスワード</label>
               <div class="password-row">
-                <input id="activatePassword" class="input" name="password" type="password" autocomplete="new-password" minlength="12" required>
+                <input id="activatePassword" class="input" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="32" pattern="[A-Za-z0-9]{8,32}" required>
                 <button class="toggle-password" type="button" data-target="activatePassword">表示</button>
               </div>
-              <div class="field-help">12文字以上で、大文字・小文字・数字・記号を含めてください。</div>
+              <div class="field-help">8〜32文字の半角英字と数字で入力してください。記号は不要です。</div>
             </div>
             <div class="field">
               <label for="activatePasswordConfirm">パスワード確認</label>
               <div class="password-row">
-                <input id="activatePasswordConfirm" class="input" type="password" autocomplete="new-password" minlength="12" required>
+                <input id="activatePasswordConfirm" class="input" type="password" autocomplete="new-password" minlength="8" maxlength="32" pattern="[A-Za-z0-9]{8,32}" required>
                 <button class="toggle-password" type="button" data-target="activatePasswordConfirm">表示</button>
               </div>
             </div>
@@ -464,7 +464,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-3-OWNER-20260805';
+    const APP_VERSION = 'SHUKYAKU-3-R1-OWNER-20260805';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -576,7 +576,7 @@
 
       if (!userCode || !setupToken || !password) return showMessage('activationMessage', '必須項目を入力してください。', 'error');
       if (password !== confirm) return showMessage('activationMessage', '確認用パスワードが一致しません。', 'error');
-      if (!isStrongPassword(password)) return showMessage('activationMessage', '12文字以上で、大文字・小文字・数字・記号を含めてください。', 'error');
+      if (!isStrongPassword(password)) return showMessage('activationMessage', '8〜32文字の半角英字と数字で入力してください。記号は不要です。', 'error');
 
       setLoading(true, '管理者を有効化しています');
       $('activateButton').disabled = true;
@@ -595,7 +595,14 @@
         await refreshHealth();
         $('loginPassword').focus();
       } catch (error) {
-        showMessage('activationMessage', error.message, 'error');
+        if (error.code === 'admin_already_active' || error.status === 409) {
+          showMessage('activationMessage', '管理者設定は完了しています。右側からログインしてください。', 'success');
+          await refreshHealth().catch(() => {});
+          $('loginPassword').focus();
+        } else {
+          const stage = error.details && error.details.stage ? `（${error.details.stage}）` : '';
+          showMessage('activationMessage', `${error.message}${stage}`, 'error');
+        }
       } finally {
         $('activateButton').disabled = false;
         setLoading(false);
@@ -924,7 +931,7 @@
     }
 
     function isStrongPassword(value) {
-      return value.length >= 12 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
+      return value.length >= 8 && value.length <= 32 && /^[A-Za-z0-9]+$/.test(value) && /[A-Za-z]/.test(value) && /\d/.test(value);
     }
 
     function integrationMeta(provider) {
