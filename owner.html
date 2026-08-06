@@ -268,6 +268,38 @@
     .impact-line { display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:.78rem; }
     .impact-line strong { font-size:.9rem; }
     .impact-sub { margin-top:4px; color:var(--muted); font-size:.7rem; }
+    .report-controls { display:grid; grid-template-columns:180px 1fr 1fr auto; gap:12px; align-items:end; }
+    .report-controls label { display:grid; gap:6px; color:var(--muted); font-size:.78rem; font-weight:800; }
+    .report-controls select { min-height:52px; padding:10px 12px; border:1px solid #bdcec6; border-radius:12px; background:#fff; color:var(--ink); }
+    .report-hero { padding:24px; border-radius:16px; background:linear-gradient(135deg,var(--brand-soft),#fff); border:1px solid var(--line); }
+    .report-hero h2 { margin:0 0 7px; font-size:1.35rem; }
+    .report-hero p { margin:0; color:var(--muted); }
+    .report-kpi-change { margin-top:6px; font-size:.76rem; font-weight:800; }
+    .report-kpi-change.up { color:var(--brand-2); }
+    .report-kpi-change.down { color:var(--danger); }
+    .report-kpi-change.flat, .report-kpi-change.unknown { color:var(--muted); }
+    .report-highlight { padding:15px; border-radius:13px; border:1px solid var(--line); background:var(--surface-soft); }
+    .report-highlight strong { display:block; margin-bottom:4px; }
+    .report-highlight.positive { border-color:#b9ddcf; background:#edf8f3; }
+    .report-highlight.warning { border-color:#efd79b; background:#fff8e8; }
+    .report-actions { display:grid; gap:10px; }
+    .report-action { display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:12px; align-items:start; padding:14px; border:1px solid var(--line); border-radius:13px; }
+    .report-action-number { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; color:#fff; background:var(--brand-2); font-weight:900; }
+    .report-action h3 { margin:0; font-size:.96rem; }
+    .report-action p { margin:3px 0 0; color:var(--muted); font-size:.78rem; }
+    .report-history-row { cursor:pointer; }
+    .report-history-row:hover { background:var(--surface-soft); }
+    @media (max-width: 980px) { .report-controls { grid-template-columns:1fr 1fr; } .report-controls .secondary { grid-column:1/-1; } }
+    @media (max-width: 620px) { .report-controls { grid-template-columns:1fr; } .report-controls .secondary { grid-column:auto; } }
+    @media print {
+      .topbar, .sidebar, .page-actions, #reportControlCard, #reportHistoryCard, .toast-wrap, .loading-overlay { display:none !important; }
+      .dashboard-shell { display:block !important; }
+      .main { padding:0 !important; }
+      .view { display:none !important; }
+      #view-reports { display:block !important; }
+      body { background:#fff !important; font-size:12px; }
+      .card { box-shadow:none !important; break-inside:avoid; }
+    }
     .impact-pill { display:inline-flex; align-items:center; min-height:24px; padding:2px 7px; border-radius:999px; font-size:.68rem; font-weight:900; }
     .impact-pill.improved { color:var(--brand); background:var(--brand-soft); }
     .impact-pill.no_change { color:var(--warn); background:var(--warn-soft); }
@@ -327,7 +359,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-8</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-9</p>
         </div>
       </div>
       <div class="top-actions">
@@ -450,7 +482,7 @@
         <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
         <button class="nav-button" type="button" data-view="pagespeed"><span class="nav-icon">速</span>ページ診断</button>
         <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
-        <button class="nav-button locked" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
+        <button class="nav-button" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
         <div class="nav-section">システム</div>
         <button class="nav-button" type="button" data-view="integrations"><span class="nav-icon">連</span>連携設定</button>
         <button class="nav-button" type="button" data-view="system"><span class="nav-icon">設</span>システム状態</button>
@@ -658,6 +690,64 @@
           </article>
         </section>
 
+        <section id="view-reports" class="view" hidden>
+          <div class="page-head">
+            <div><h1>週次・月次レポート</h1><p>検索・アクセス・問い合わせ・ページ品質・改善作業を、経営判断用にまとめます。</p></div>
+            <div class="page-actions"><button id="reportPrintButton" class="secondary" type="button" disabled>印刷</button><button id="reportRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+
+          <article id="reportControlCard" class="card">
+            <div class="card-title-row"><h2 class="card-title">レポートを作成</h2><span class="badge ok">自動作成対応</span></div>
+            <div class="report-controls">
+              <label>種類<select id="reportTypeSelect"><option value="weekly">週次レポート</option><option value="monthly">月次レポート</option></select></label>
+              <div class="field" style="margin:0"><label for="reportDateFrom">開始日</label><input id="reportDateFrom" class="input" type="date"></div>
+              <div class="field" style="margin:0"><label for="reportDateTo">終了日</label><input id="reportDateTo" class="input" type="date"></div>
+              <button id="reportGenerateButton" class="secondary" type="button">この期間で作成</button>
+            </div>
+            <div class="field-help" style="margin-top:10px">週次は毎週木曜日、月次は毎月4日に、確定データを使って自動作成します。</div>
+          </article>
+
+          <article class="report-hero section-space">
+            <div class="card-title-row"><h2 id="reportTitle">まだレポートがありません</h2><span id="reportStatusBadge" class="badge off">未作成</span></div>
+            <p id="reportExecutiveSummary">期間を選択してレポートを作成してください。</p>
+            <div id="reportPeriodMessage" class="field-help" style="margin-top:10px"></div>
+          </article>
+
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">検索表示</div><div id="reportImpressions" class="metric-value">―</div><div id="reportImpressionsChange" class="report-kpi-change unknown">前期間比 ―</div></article>
+            <article class="card"><div class="metric-label">サイト訪問</div><div id="reportSessions" class="metric-value">―</div><div id="reportSessionsChange" class="report-kpi-change unknown">前期間比 ―</div></article>
+            <article class="card"><div class="metric-label">相談・問い合わせ行動</div><div id="reportConversions" class="metric-value">―</div><div id="reportConversionsChange" class="report-kpi-change unknown">前期間比 ―</div></article>
+            <article class="card"><div class="metric-label">スマホPerformance</div><div id="reportMobilePerformance" class="metric-value">―</div><div id="reportMobilePerformanceChange" class="report-kpi-change unknown">前期間比 ―</div></article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">今回のポイント</h2><span id="reportHighlightBadge" class="badge off">0件</span></div>
+              <div id="reportHighlights" class="report-actions"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">次に行う改善</h2><span id="reportActionBadge" class="badge off">0件</span></div>
+              <div id="reportNextActions" class="report-actions"></div>
+            </article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">表示された検索語</h2><span id="reportQueryBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>検索語</th><th>表示</th><th>クリック</th><th>順位</th></tr></thead><tbody id="reportQueryTable"></tbody></table></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">主な流入元</h2><span id="reportSourceBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>流入元 / メディア</th><th>セッション</th><th>利用者</th></tr></thead><tbody id="reportSourceTable"></tbody></table></div>
+            </article>
+          </div>
+
+          <article id="reportHistoryCard" class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">作成履歴</h2><span id="reportHistoryBadge" class="badge off">0件</span></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>レポート</th><th>種類</th><th>期間</th><th>作成日時</th></tr></thead><tbody id="reportHistoryTable"></tbody></table></div>
+          </article>
+        </section>
+
         <section id="view-search-console" class="view" hidden>
           <div class="page-head">
             <div><h1>Google検索データ</h1><p>実際に表示された検索語、クリック数、表示回数、平均掲載順位を確認します。</p></div>
@@ -785,7 +875,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-8-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-9-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -802,6 +892,7 @@
       ga4: { status: null, properties: [], summary: null },
       conversions: { summary: null },
       pagespeed: { summary: null, detail: null },
+      reports: { items: [], current: null },
       taskImpactSummary: {},
       managementSummary: null,
       loadedViews: new Set(),
@@ -814,6 +905,7 @@
       bindEvents();
       setDefaultGscDates();
       setDefaultGa4Dates();
+      setDefaultReportDates();
       restoreSession();
       refreshHealth().then(() => {
         if (state.token) tryResumeSession();
@@ -843,6 +935,10 @@
       $('pagespeedRunButton').addEventListener('click', () => runPageSpeed(false));
       $('pagespeedRunBothButton').addEventListener('click', () => runPageSpeed(true));
       $('pagespeedCreateTasksButton').addEventListener('click', autoCreatePageSpeedTasks);
+      $('reportRefreshButton').addEventListener('click', () => loadReports(true));
+      $('reportGenerateButton').addEventListener('click', generateReport);
+      $('reportTypeSelect').addEventListener('change', setDefaultReportDates);
+      $('reportPrintButton').addEventListener('click', () => window.print());
       $('activationForm').addEventListener('submit', handleActivation);
       $('loginForm').addEventListener('submit', handleLogin);
       $('logoutTopButton').addEventListener('click', logout);
@@ -1640,7 +1736,7 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'pagespeed', 'tasks', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
@@ -1650,6 +1746,7 @@
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
         if (view === 'pagespeed') loadPageSpeedView().catch((error) => toast(error.message, 'error'));
+        if (view === 'reports') loadReports().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
         return;
       }
@@ -1665,7 +1762,6 @@
     function lockedViewMeta(view) {
       const map = {
                 maps: { title: 'Googleマップ', heading: 'SHUKYAKU-10で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
-                reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
       };
       return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
     }
@@ -1724,6 +1820,159 @@
       const current = select.value;
       select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>${options.map(([value,label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join('')}`;
       select.value = current;
+    }
+
+    async function loadReports(force = false) {
+      if (!state.token) return;
+      if (!force && state.loadedViews.has('reports') && state.reports.items.length) {
+        renderReports();
+        return;
+      }
+      const data = await api('/api/reports');
+      state.reports.items = data.items || [];
+      state.loadedViews.add('reports');
+      if (state.reports.current) {
+        const exists = state.reports.items.some((item) => item.id === state.reports.current.id);
+        if (!exists) state.reports.current = null;
+      }
+      if (!state.reports.current && state.reports.items[0]) {
+        const detail = await api(`/api/reports/${state.reports.items[0].id}`);
+        state.reports.current = detail.item || null;
+      }
+      renderReports();
+    }
+
+    async function generateReport() {
+      const reportType = $('reportTypeSelect').value;
+      const periodFrom = $('reportDateFrom').value;
+      const periodTo = $('reportDateTo').value;
+      if (!periodFrom || !periodTo) return toast('レポート期間を入力してください。', 'error');
+      setLoading(true, 'レポートを作成しています');
+      $('reportGenerateButton').disabled = true;
+      try {
+        const data = await api('/api/reports/generate', {
+          method: 'POST', timeout: 60000, body: { reportType, periodFrom, periodTo },
+        });
+        state.reports.current = data.item || null;
+        state.loadedViews.delete('reports');
+        await loadReports(true);
+        if (data.item) state.reports.current = data.item;
+        renderReports();
+        toast('レポートを作成しました。', 'success');
+      } finally {
+        $('reportGenerateButton').disabled = false;
+        setLoading(false);
+      }
+    }
+
+    async function openReport(id) {
+      setLoading(true, 'レポートを読み込んでいます');
+      try {
+        const data = await api(`/api/reports/${id}`);
+        state.reports.current = data.item || null;
+        renderReports();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } finally { setLoading(false); }
+    }
+
+    function renderReports() {
+      const current = state.reports.current;
+      const items = state.reports.items || [];
+      $('reportHistoryBadge').textContent = `${items.length}件`;
+      $('reportHistoryBadge').className = `badge ${items.length ? 'ok' : 'off'}`;
+      $('reportHistoryTable').innerHTML = items.length ? items.map((item) => `
+        <tr class="report-history-row" onclick="window.SHUKYAKU.openReport('${item.id}')">
+          <td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.summary || '')}</div></td>
+          <td>${escapeHtml(item.reportType === 'weekly' ? '週次' : '月次')}</td>
+          <td>${escapeHtml(item.periodFrom)}〜${escapeHtml(item.periodTo)}</td>
+          <td>${escapeHtml(formatJapanDate(item.generatedAt || item.createdAt))}</td>
+        </tr>`).join('') : emptyTableRow(4, '作成済みレポートはありません。');
+
+      if (!current?.reportPayload) {
+        $('reportTitle').textContent = 'まだレポートがありません';
+        $('reportExecutiveSummary').textContent = '期間を選択してレポートを作成してください。';
+        $('reportStatusBadge').textContent = '未作成';
+        $('reportStatusBadge').className = 'badge off';
+        $('reportPeriodMessage').textContent = '';
+        ['reportImpressions','reportSessions','reportConversions','reportMobilePerformance'].forEach((id) => $(id).textContent = '―');
+        ['reportImpressionsChange','reportSessionsChange','reportConversionsChange','reportMobilePerformanceChange'].forEach((id) => { $(id).textContent = '前期間比 ―'; $(id).className = 'report-kpi-change unknown'; });
+        $('reportHighlights').innerHTML = '<div class="empty-panel">レポート作成後に表示します。</div>';
+        $('reportNextActions').innerHTML = '<div class="empty-panel">レポート作成後に表示します。</div>';
+        $('reportQueryTable').innerHTML = emptyTableRow(4, 'データがありません。');
+        $('reportSourceTable').innerHTML = emptyTableRow(3, 'データがありません。');
+        $('reportPrintButton').disabled = true;
+        return;
+      }
+
+      const payload = current.reportPayload;
+      const kpis = payload.kpis || {};
+      $('reportTitle').textContent = current.title || '集客レポート';
+      $('reportExecutiveSummary').textContent = payload.executiveSummary || current.summary || '';
+      $('reportStatusBadge').textContent = current.reportType === 'weekly' ? '週次' : '月次';
+      $('reportStatusBadge').className = 'badge ok';
+      $('reportPeriodMessage').textContent = `対象：${payload.period?.label || `${current.periodFrom}〜${current.periodTo}`}｜比較：${payload.period?.previousLabel || '前期間'}｜作成：${formatJapanDate(current.generatedAt)}`;
+      $('reportPrintButton').disabled = false;
+
+      renderReportKpi('reportImpressions', 'reportImpressionsChange', kpis.search?.current?.impressions, kpis.search?.changes?.impressions);
+      renderReportKpi('reportSessions', 'reportSessionsChange', kpis.access?.current?.sessions, kpis.access?.changes?.sessions);
+      renderReportKpi('reportConversions', 'reportConversionsChange', kpis.conversions?.current?.totalConversions, kpis.conversions?.changes?.totalConversions);
+      renderReportKpi('reportMobilePerformance', 'reportMobilePerformanceChange', kpis.pageSpeed?.current?.mobileAverage, kpis.pageSpeed?.changes?.mobilePerformance, false);
+
+      const highlights = payload.highlights || [];
+      $('reportHighlightBadge').textContent = `${highlights.length}件`;
+      $('reportHighlightBadge').className = `badge ${highlights.length ? 'ok' : 'off'}`;
+      $('reportHighlights').innerHTML = highlights.length ? highlights.map((item) => `<div class="report-highlight ${escapeHtml(item.tone || 'neutral')}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div>`).join('') : '<div class="empty-panel">特記事項はありません。</div>';
+
+      const actions = payload.nextActions || [];
+      $('reportActionBadge').textContent = `${actions.length}件`;
+      $('reportActionBadge').className = `badge ${actions.length ? 'wait' : 'ok'}`;
+      $('reportNextActions').innerHTML = actions.length ? actions.map((item, index) => `<div class="report-action"><div class="report-action-number">${index + 1}</div><div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.reason || '')}${item.pageName ? `｜対象：${escapeHtml(item.pageName)}` : ''}</p></div><span class="badge wait">優先度${escapeHtml(item.priority || '―')}</span></div>`).join('') : '<div class="empty-panel">新たな緊急作業はありません。</div>';
+
+      const queries = payload.topQueries || [];
+      $('reportQueryBadge').textContent = `${queries.length}件`;
+      $('reportQueryBadge').className = `badge ${queries.length ? 'ok' : 'off'}`;
+      $('reportQueryTable').innerHTML = queries.length ? queries.map((row) => `<tr><td>${escapeHtml(row.query)}</td><td>${formatNumber(row.impressions)}</td><td>${formatNumber(row.clicks)}</td><td>${escapeHtml(formatPosition(row.averagePosition))}</td></tr>`).join('') : emptyTableRow(4, 'この期間の検索語データはありません。');
+
+      const sources = payload.topSources || [];
+      $('reportSourceBadge').textContent = `${sources.length}件`;
+      $('reportSourceBadge').className = `badge ${sources.length ? 'ok' : 'off'}`;
+      $('reportSourceTable').innerHTML = sources.length ? sources.map((row) => `<tr><td>${escapeHtml(row.source)}</td><td>${formatNumber(row.sessions)}</td><td>${formatNumber(row.users)}</td></tr>`).join('') : emptyTableRow(3, 'この期間の流入元データはありません。');
+    }
+
+    function renderReportKpi(valueId, changeId, value, change, integer = true) {
+      const number = Number(value);
+      $(valueId).textContent = Number.isFinite(number) ? (integer ? formatNumber(number) : Math.round(number)) : '―';
+      const delta = Number(change?.delta);
+      const trend = change?.trend || 'unknown';
+      $(changeId).className = `report-kpi-change ${escapeHtml(trend)}`;
+      $(changeId).textContent = Number.isFinite(delta) ? `前期間比 ${delta > 0 ? '+' : ''}${integer ? formatNumber(delta) : Math.round(delta)}` : '前期間比 比較不可';
+    }
+
+    function setDefaultReportDates() {
+      if (!$('reportTypeSelect') || !$('reportDateFrom') || !$('reportDateTo')) return;
+      const type = $('reportTypeSelect').value || 'weekly';
+      const today = new Date();
+      let start;
+      let end;
+      if (type === 'monthly') {
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0);
+      } else {
+        const day = today.getDay();
+        const daysSinceMonday = (day + 6) % 7;
+        const thisMonday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysSinceMonday);
+        end = new Date(thisMonday); end.setDate(end.getDate() - 1);
+        start = new Date(end); start.setDate(start.getDate() - 6);
+      }
+      $('reportDateFrom').value = localDateValue(start);
+      $('reportDateTo').value = localDateValue(end);
+    }
+
+    function localDateValue(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
 
     function renderKeywords() {
@@ -1944,6 +2193,7 @@
       },
       remove(type,id) { deleteManagementItem(type,id); },
       measureTask(id) { measureTaskImpact(id); },
+      openReport(id) { openReport(id); },
       auditPage(id) {
         const button = document.querySelector('[data-view="pagespeed"]');
         if (!button) return;
@@ -2137,7 +2387,7 @@
       const map = {
         search_console: 'Search Console連携', ga4: 'GA4連携', business_profile: 'Googleマップ管理',
         page_audit: 'ページ診断', pagespeed: 'PageSpeedページ診断', keyword_management: 'キーワード管理', conversion_tracking: '問い合わせ計測',
-        recommendations: '改善提案', weekly_report: '週次レポート', monthly_report: '月次レポート',
+        recommendations: '改善提案', weekly_report: '週次レポート', monthly_report: '月次レポート', weekly_reports: '週次レポート', monthly_reports: '月次レポート',
         google_ads: 'Google広告分析', multi_location: '複数店舗管理'
       };
       return map[key] || key.replaceAll('_', ' ');
