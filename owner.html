@@ -372,7 +372,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-10</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-11</p>
         </div>
       </div>
       <div class="top-actions">
@@ -493,6 +493,7 @@
         <button class="nav-button" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
         <button class="nav-button" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
+        <button class="nav-button" type="button" data-view="ads"><span class="nav-icon">広</span>Google広告</button>
         <button class="nav-button" type="button" data-view="pagespeed"><span class="nav-icon">速</span>ページ診断</button>
         <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
         <button class="nav-button" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
@@ -709,6 +710,81 @@
               </form>
             </article>
           </div>
+        </section>
+
+
+        <section id="view-ads" class="view" hidden>
+          <div class="page-head">
+            <div><h1>Google広告分析</h1><p>広告費・クリック・問い合わせ成果を確認し、無駄な広告費を見つけます。</p></div>
+            <div class="page-actions"><button id="adsRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+
+          <div id="adsAccessMessage" class="notice info">Google広告APIの準備状態を確認しています。API準備前も手動記録できます。</div>
+
+          <div class="gbp-connect-grid section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">Google広告接続</h2><span id="adsConnectionBadge" class="badge wait">確認中</span></div>
+              <p id="adsConnectionText" style="margin:0 0 16px;color:var(--muted)">Developer TokenとGoogle広告権限が必要です。</p>
+              <div class="row-actions">
+                <button id="adsConnectButton" class="secondary" type="button">Google広告を接続</button>
+                <button id="adsProbeButton" class="secondary" type="button">アカウントを取得</button>
+                <button id="adsDisconnectButton" class="danger-button" type="button" hidden>設定を解除</button>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">取得する広告アカウント</h2><span id="adsCustomerBadge" class="badge off">未選択</span></div>
+              <div class="gsc-property">
+                <select id="adsCustomerSelect" disabled><option value="">API準備後に取得できます</option></select>
+                <button id="adsCustomerSaveButton" class="secondary" type="button" disabled>このアカウントを使用</button>
+              </div>
+            </article>
+          </div>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">Google広告データを同期</h2><span id="adsSyncBadge" class="badge off">未同期</span></div>
+            <div class="sync-form">
+              <div class="field"><label for="adsDateFrom">開始日</label><input id="adsDateFrom" class="input" type="date"></div>
+              <div class="field"><label for="adsDateTo">終了日</label><input id="adsDateTo" class="input" type="date"></div>
+              <button id="adsSyncButton" class="secondary" type="button" disabled>同期を実行</button>
+            </div>
+            <div class="field-help" style="margin-top:10px">API接続後は最大92日分を取得できます。日次自動同期は2日前の確定データを取得します。</div>
+          </article>
+
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">表示回数</div><div id="adsImpressions" class="metric-value">―</div><div class="metric-note">広告が表示された回数</div></article>
+            <article class="card"><div class="metric-label">クリック数</div><div id="adsClicks" class="metric-value">―</div><div class="metric-note">広告からの訪問</div></article>
+            <article class="card"><div class="metric-label">クリック率</div><div id="adsCtr" class="metric-value">―</div><div class="metric-note">クリック ÷ 表示</div></article>
+            <article class="card"><div class="metric-label">広告費</div><div id="adsCost" class="metric-value">―</div><div class="metric-note">選択期間の費用</div></article>
+          </div>
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">コンバージョン</div><div id="adsConversions" class="metric-value">―</div><div class="metric-note">問い合わせ等の成果</div></article>
+            <article class="card"><div class="metric-label">成果1件の費用</div><div id="adsCostPerConversion" class="metric-value">―</div><div class="metric-note">広告費 ÷ 成果</div></article>
+            <article class="card"><div class="metric-label">コンバージョン価値</div><div id="adsConversionValue" class="metric-value">―</div><div class="metric-note">設定済み成果価値</div></article>
+            <article class="card"><div class="metric-label">ROAS</div><div id="adsRoas" class="metric-value">―</div><div class="metric-note">成果価値 ÷ 広告費</div></article>
+          </div>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">キャンペーン別実績</h2><span id="adsCampaignBadge" class="badge off">0件</span></div>
+            <div class="table-wrap"><table class="data-table" style="min-width:1000px"><thead><tr><th>キャンペーン</th><th>状態</th><th>表示</th><th>クリック</th><th>CTR</th><th>費用</th><th>成果</th><th>成果単価</th></tr></thead><tbody id="adsCampaignTable"></tbody></table></div>
+          </article>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">手動記録</h2><span class="badge ok">API準備前も利用可</span></div>
+            <form id="adsManualForm">
+              <div class="manual-profile-grid">
+                <div class="field"><label for="adsManualDateFrom">開始日</label><input id="adsManualDateFrom" class="input" type="date" required></div>
+                <div class="field"><label for="adsManualDateTo">終了日</label><input id="adsManualDateTo" class="input" type="date" required></div>
+                <div class="field"><label for="adsManualImpressions">表示回数</label><input id="adsManualImpressions" class="input" type="number" min="0" value="0"></div>
+                <div class="field"><label for="adsManualClicks">クリック数</label><input id="adsManualClicks" class="input" type="number" min="0" value="0"></div>
+                <div class="field"><label for="adsManualCost">広告費（円）</label><input id="adsManualCost" class="input" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label for="adsManualConversions">コンバージョン数</label><input id="adsManualConversions" class="input" type="number" min="0" step="0.01" value="0"></div>
+                <div class="field"><label for="adsManualConversionValue">コンバージョン価値（円）</label><input id="adsManualConversionValue" class="input" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label for="adsManualCampaignCount">キャンペーン数</label><input id="adsManualCampaignCount" class="input" type="number" min="0" value="0"></div>
+                <div class="field" style="grid-column:span 2"><label for="adsManualNotes">メモ</label><input id="adsManualNotes" class="input" placeholder="広告を出していない場合は、費用0円のまま保存できます"></div>
+              </div>
+              <button class="secondary section-space" type="submit">手動記録を保存</button>
+            </form>
+          </article>
         </section>
 
         <section id="view-pagespeed" class="view" hidden>
@@ -976,7 +1052,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-10-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-11-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -993,6 +1069,7 @@
       ga4: { status: null, properties: [], summary: null },
       conversions: { summary: null },
       businessProfile: { status: null, accounts: [], locations: [], summary: null },
+      googleAds: { status: null, customers: [], summary: null },
       pagespeed: { summary: null, detail: null },
       reports: { items: [], current: null },
       taskImpactSummary: {},
@@ -1008,6 +1085,7 @@
       setDefaultGscDates();
       setDefaultGa4Dates();
       setDefaultReportDates();
+      setDefaultAdsDates();
       restoreSession();
       refreshHealth().then(() => {
         if (state.token) tryResumeSession();
@@ -1040,6 +1118,13 @@
       $('gbpManualForm').addEventListener('submit', saveManualBusinessProfile);
       $('gbpTaskForm').addEventListener('submit', createBusinessProfileTask);
       $('gbpTaskTable').addEventListener('click', handleBusinessProfileTaskClick);
+      $('adsRefreshButton').addEventListener('click', () => loadGoogleAdsView(true));
+      $('adsConnectButton').addEventListener('click', startGoogleAdsConnection);
+      $('adsProbeButton').addEventListener('click', () => loadGoogleAdsCustomers(false));
+      $('adsCustomerSaveButton').addEventListener('click', saveGoogleAdsCustomer);
+      $('adsSyncButton').addEventListener('click', syncGoogleAds);
+      $('adsDisconnectButton').addEventListener('click', disconnectGoogleAds);
+      $('adsManualForm').addEventListener('submit', saveManualGoogleAds);
       $('pagespeedRefreshButton').addEventListener('click', () => loadPageSpeedView(true));
       $('pagespeedPageSelect').addEventListener('change', () => loadPageSpeedDetail(true));
       $('pagespeedStrategySelect').addEventListener('change', () => loadPageSpeedDetail(true));
@@ -1279,15 +1364,17 @@
     async function loadGoogleReadiness() {
       setLoading(true, 'Google連携設定を確認しています');
       try {
-        const [readiness, status, ga4Status, gbpStatus] = await Promise.all([
+        const [readiness, status, ga4Status, gbpStatus, adsStatus] = await Promise.all([
           api('/api/oauth/google/readiness'),
           api('/api/search-console/status'),
           api('/api/ga4/status'),
           api('/api/business-profile/status'),
+          api('/api/google-ads/status'),
         ]);
         state.searchConsole.status = status;
         state.ga4.status = ga4Status;
         state.businessProfile.status = gbpStatus;
+        state.googleAds.status = adsStatus;
         $('oauthBadge').textContent = readiness.configured ? 'OAuth準備済み' : 'OAuth未設定';
         $('oauthBadge').className = `badge ${readiness.configured ? 'ok' : 'wait'}`;
         const missing = Object.entries(readiness.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
@@ -1298,10 +1385,12 @@
         renderSearchConsoleConnection(status, readiness.configured);
         renderGa4Connection(ga4Status, readiness.configured);
         renderBusinessProfileConnection(gbpStatus);
+        renderGoogleAdsStatus(adsStatus);
         const jobs = [];
         if (status.integration?.connectionStatus === 'connected' || status.integration?.connectionStatus === 'error') jobs.push(loadSearchConsoleProperties());
         if (ga4Status.analyticsScopeGranted) jobs.push(loadGa4Properties());
         if (gbpStatus.scopeGranted && gbpStatus.apiAccess === 'approved') jobs.push(loadBusinessProfileAccounts(true));
+        if (adsStatus.apiReady) jobs.push(loadGoogleAdsCustomers(true));
         await Promise.allSettled(jobs);
       } catch (error) {
         toast(error.message, 'error');
@@ -1345,8 +1434,18 @@
     async function handleOAuthReturn() {
       const params = new URLSearchParams(location.search);
       const result = params.get('gsc');
-      if (!result) return;
+      const adsResult = params.get('ads');
+      if (!result && !adsResult) return;
       history.replaceState({}, document.title, location.pathname);
+      if (adsResult && adsResult !== 'not_requested') {
+        const button = document.querySelector('[data-view="ads"]');
+        if (button) switchView('ads', button);
+        if (adsResult === 'connected') toast('Google広告の権限を接続しました。取得する広告アカウントを選択してください。', 'success');
+        else if (adsResult === 'developer_token_missing') toast('Google広告の権限は取得済みです。Developer TokenをCloudflareへ登録してください。', 'error');
+        else toast(`Google広告接続を確認してください（${adsResult}）。`, 'error');
+        await loadGoogleAdsView(true).catch(() => {});
+        return;
+      }
       const button = document.querySelector('[data-view="integrations"]');
       if (button) switchView('integrations', button);
       if (result === 'connected') {
@@ -1703,6 +1802,190 @@
     function gbpHoursText(value) { if (!value || typeof value !== 'object') return ''; if (value.note) return value.note; const periods=value.periods||[]; return periods.length ? `${periods.length}件の営業時間設定` : ''; }
     function formatShortDate(value) { const text=String(value || ''); return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text.replaceAll('-', '/') : (text || '未記録'); }
     function dataDateText(value) { return value ? formatJapanDate(value) : '未記録'; }
+
+    async function loadGoogleAdsView(force = false) {
+      if (!state.token) return;
+      if (!force && state.googleAds.status && state.googleAds.summary) {
+        renderGoogleAdsStatus(state.googleAds.status);
+        renderGoogleAdsSummary(state.googleAds.summary);
+        return;
+      }
+      setLoading(true, 'Google広告データを読み込んでいます');
+      try {
+        const query = `?dateFrom=${encodeURIComponent($('adsDateFrom').value)}&dateTo=${encodeURIComponent($('adsDateTo').value)}`;
+        const [status, summary] = await Promise.all([api('/api/google-ads/status'), api(`/api/google-ads/summary${query}`)]);
+        state.googleAds.status = status;
+        state.googleAds.summary = summary;
+        renderGoogleAdsStatus(status);
+        renderGoogleAdsSummary(summary);
+        if (status.apiReady) await loadGoogleAdsCustomers(true);
+      } catch (error) {
+        $('adsAccessMessage').className = 'notice error';
+        $('adsAccessMessage').textContent = error.message;
+      } finally { setLoading(false); }
+    }
+
+    function renderGoogleAdsStatus(status) {
+      if (!$('adsConnectionBadge')) return;
+      const integration = status?.integration || {};
+      const apiReady = Boolean(status?.apiReady);
+      const selected = Boolean(integration.selectedCustomerId);
+      const connected = integration.connectionStatus === 'connected' && selected;
+      $('adsConnectionBadge').textContent = connected ? '接続済み' : apiReady ? 'アカウント選択待ち' : '手動管理';
+      $('adsConnectionBadge').className = `badge ${connected ? 'ok' : apiReady ? 'wait' : 'off'}`;
+      $('adsCustomerBadge').textContent = selected ? '選択済み' : '未選択';
+      $('adsCustomerBadge').className = `badge ${selected ? 'ok' : 'off'}`;
+      $('adsConnectionText').textContent = !status?.oauthConfigured
+        ? 'Google OAuth設定が未完了です。手動記録は利用できます。'
+        : !status?.developerTokenConfigured
+          ? 'Developer Token未登録です。Google広告APIの準備前は手動記録を利用できます。'
+          : !status?.scopeGranted
+            ? 'Google広告の権限を追加して接続してください。'
+            : selected
+              ? `接続済み・${integration.selectedCustomerName || formatAdsCustomerId(integration.selectedCustomerId)}`
+              : 'Google広告アカウントを取得して、分析対象を選択してください。';
+      $('adsAccessMessage').className = `notice ${connected ? 'success' : 'info'}`;
+      $('adsAccessMessage').textContent = connected
+        ? `Google広告は読み取り専用で接続されています。最終同期：${integration.lastSyncAt ? formatJapanDate(integration.lastSyncAt) : '未同期'}`
+        : '広告の作成・変更・停止は行いません。API準備前も、広告管理画面の数値を手動記録できます。';
+      $('adsConnectButton').disabled = !status?.oauthConfigured;
+      $('adsProbeButton').disabled = !apiReady;
+      $('adsSyncButton').disabled = !(apiReady && selected);
+      $('adsDisconnectButton').hidden = !selected;
+      $('adsSyncBadge').textContent = integration.lastSyncAt ? formatJapanDate(integration.lastSyncAt) : '未同期';
+      $('adsSyncBadge').className = `badge ${integration.lastSyncAt ? 'ok' : 'off'}`;
+    }
+
+    async function startGoogleAdsConnection() {
+      setLoading(true, 'Google広告の接続画面を準備しています');
+      try {
+        const data = await api('/api/google-ads/oauth/start');
+        if (!data.authUrl) throw new Error('Google広告接続URLを取得できませんでした。');
+        window.location.assign(data.authUrl);
+      } catch (error) {
+        toast(error.message, 'error');
+        setLoading(false);
+      }
+    }
+
+    async function loadGoogleAdsCustomers(silent = false) {
+      if (!silent) setLoading(true, 'Google広告アカウントを取得しています');
+      try {
+        const data = await api('/api/google-ads/customers', { timeout:90000 });
+        state.googleAds.customers = data.items || [];
+        const select = $('adsCustomerSelect');
+        select.innerHTML = '<option value="">Google広告アカウントを選択</option>' + state.googleAds.customers.map((item) => {
+          const packed = `${item.customerId}|${item.loginCustomerId || ''}`;
+          const type = item.manager ? '管理アカウント' : '広告アカウント';
+          return `<option value="${escapeHtml(packed)}"${item.selected ? ' selected' : ''}>${escapeHtml(item.name || '名称未設定')}（${escapeHtml(formatAdsCustomerId(item.customerId))}・${type}）</option>`;
+        }).join('');
+        select.disabled = !state.googleAds.customers.length;
+        $('adsCustomerSaveButton').disabled = !state.googleAds.customers.length;
+        if (!silent) toast(`${state.googleAds.customers.length}件のGoogle広告アカウントを取得しました。`, 'success');
+      } catch (error) {
+        $('adsCustomerSelect').innerHTML = '<option value="">アカウントを取得できません</option>';
+        $('adsCustomerSelect').disabled = true;
+        $('adsCustomerSaveButton').disabled = true;
+        if (!silent) toast(error.message, 'error');
+      } finally { if (!silent) setLoading(false); }
+    }
+
+    async function saveGoogleAdsCustomer() {
+      const packed = $('adsCustomerSelect').value;
+      if (!packed) return toast('取得するGoogle広告アカウントを選択してください。', 'error');
+      const [customerId, loginCustomerId] = packed.split('|');
+      setLoading(true, 'Google広告アカウントを保存しています');
+      try {
+        await api('/api/google-ads/customer', { method:'POST', body:{ customerId, loginCustomerId:loginCustomerId || null }, timeout:90000 });
+        toast('取得するGoogle広告アカウントを保存しました。', 'success');
+        state.googleAds.summary = null;
+        await Promise.all([loadGoogleAdsView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function syncGoogleAds() {
+      const dateFrom = $('adsDateFrom').value;
+      const dateTo = $('adsDateTo').value;
+      if (!dateFrom || !dateTo) return toast('同期期間を入力してください。', 'error');
+      setLoading(true, 'Google広告データを取得しています');
+      try {
+        const data = await api('/api/google-ads/sync', { method:'POST', body:{ dateFrom, dateTo }, timeout:120000 });
+        toast(`${data.rowCount || 0}件のGoogle広告データを同期しました。`, 'success');
+        state.googleAds.summary = null;
+        await Promise.all([loadGoogleAdsView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function saveManualGoogleAds(event) {
+      event.preventDefault();
+      const body = {
+        periodFrom:$('adsManualDateFrom').value,
+        periodTo:$('adsManualDateTo').value,
+        impressions:Number($('adsManualImpressions').value || 0),
+        clicks:Number($('adsManualClicks').value || 0),
+        costYen:Number($('adsManualCost').value || 0),
+        conversions:Number($('adsManualConversions').value || 0),
+        conversionValue:Number($('adsManualConversionValue').value || 0),
+        campaignCount:Number($('adsManualCampaignCount').value || 0),
+        notes:$('adsManualNotes').value.trim(),
+      };
+      setLoading(true, 'Google広告の手動記録を保存しています');
+      try {
+        await api('/api/google-ads/manual', { method:'POST', body });
+        toast('Google広告の手動記録を保存しました。', 'success');
+        state.googleAds.summary = null;
+        await Promise.all([loadGoogleAdsView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function disconnectGoogleAds() {
+      if (!confirm('Google広告の選択アカウント設定を解除しますか？Search Console・GA4のGoogle接続は残ります。')) return;
+      setLoading(true, 'Google広告設定を解除しています');
+      try {
+        await api('/api/google-ads/disconnect', { method:'DELETE' });
+        state.googleAds = { status:null, customers:[], summary:null };
+        toast('Google広告のアカウント設定を解除しました。', 'success');
+        await Promise.all([loadGoogleAdsView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    function renderGoogleAdsSummary(data) {
+      const totals = data?.totals || {};
+      $('adsImpressions').textContent = formatNumber(totals.impressions || 0);
+      $('adsClicks').textContent = formatNumber(totals.clicks || 0);
+      $('adsCtr').textContent = formatPercent(totals.ctr || 0);
+      $('adsCost').textContent = formatYen(totals.cost || 0);
+      $('adsConversions').textContent = formatAdsDecimal(totals.conversions || 0);
+      $('adsCostPerConversion').textContent = totals.conversions > 0 ? formatYen(totals.costPerConversion || 0) : '―';
+      $('adsConversionValue').textContent = formatYen(totals.conversionValue || 0);
+      $('adsRoas').textContent = totals.cost > 0 ? `${(Number(totals.roas || 0) * 100).toFixed(0)}%` : '―';
+      const campaigns = data?.campaigns || [];
+      $('adsCampaignBadge').textContent = `${campaigns.length}件`;
+      $('adsCampaignBadge').className = `badge ${campaigns.length ? 'ok' : 'off'}`;
+      $('adsCampaignTable').innerHTML = campaigns.length ? campaigns.map((item) => `<tr><td><strong>${escapeHtml(item.name || '名称未設定')}</strong><div class="cell-sub">${escapeHtml(item.channelType || data.mode || '')}</div></td><td>${escapeHtml(adsCampaignStatusLabel(item.status))}</td><td>${formatNumber(item.impressions || 0)}</td><td>${formatNumber(item.clicks || 0)}</td><td>${formatPercent(item.ctr || 0)}</td><td>${formatYen(item.cost || 0)}</td><td>${formatAdsDecimal(item.conversions || 0)}</td><td>${item.conversions > 0 ? formatYen(item.costPerConversion || 0) : '―'}</td></tr>`).join('') : '<tr><td colspan="8" class="empty-panel">Google広告データはまだありません。広告を利用していない場合は、手動記録で費用0円を保存できます。</td></tr>';
+      if (data?.period?.dateFrom) {
+        $('adsManualDateFrom').value = data.period.dateFrom;
+        $('adsManualDateTo').value = data.period.dateTo;
+      }
+    }
+
+    function setDefaultAdsDates() {
+      const end = new Date(); end.setDate(end.getDate() - 1);
+      const start = new Date(); start.setDate(start.getDate() - 30);
+      const from = start.toISOString().slice(0,10), to = end.toISOString().slice(0,10);
+      $('adsDateFrom').value = from; $('adsDateTo').value = to;
+      $('adsManualDateFrom').value = from; $('adsManualDateTo').value = to;
+    }
+
+    function formatAdsCustomerId(value) { const digits=String(value||'').replace(/\D/g,''); return /^\d{10}$/.test(digits) ? `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}` : digits; }
+    function formatYen(value) { return `${new Intl.NumberFormat('ja-JP',{maximumFractionDigits:0}).format(Number(value||0))}円`; }
+    function formatAdsDecimal(value) { const n=Number(value||0); return Number.isInteger(n) ? formatNumber(n) : n.toFixed(2); }
+    function adsCampaignStatusLabel(value) { return ({ENABLED:'配信中',PAUSED:'一時停止',REMOVED:'削除済み',MANUAL:'手動記録',UNKNOWN:'未確認'})[value] || value || '未確認'; }
+
     async function loadConversionView(force = false) {
       if (!state.token) return;
       if (!force && state.conversions.summary) return renderConversionSummary(state.conversions.summary);
@@ -2042,6 +2325,7 @@
         ['Google OAuth', h?.googleOauthPrepared ? '準備済み' : '未設定（現段階では正常）'],
         ['PageSpeed API', h?.pagespeedPrepared ? '準備済み' : '未設定'],
         ['Googleビジネスプロフィール', h?.businessProfileOAuthPrepared ? 'OAuth準備済み' : '手動管理のみ'],
+        ['Google広告API', h?.googleAdsPrepared ? 'Developer Token登録済み' : '手動管理のみ'],
         ['最終確認', h?.checkedAt ? formatJapanDate(h.checkedAt) : '未確認'],
       ];
       $('systemTableBody').innerHTML = rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('');
@@ -2055,7 +2339,7 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'maps', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'maps', 'ads', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
@@ -2065,6 +2349,7 @@
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
         if (view === 'maps') loadBusinessProfileView().catch((error) => toast(error.message, 'error'));
+        if (view === 'ads') loadGoogleAdsView().catch((error) => toast(error.message, 'error'));
         if (view === 'pagespeed') loadPageSpeedView().catch((error) => toast(error.message, 'error'));
         if (view === 'reports') loadReports().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
@@ -2687,7 +2972,7 @@
         ga4: { label: 'Google Analytics 4', description: 'アクセス・行動・相談ボタン・問い合わせ' },
         business_profile: { label: 'Googleビジネスプロフィール', description: '基本情報・口コミ・写真・投稿・反応' },
         pagespeed: { label: 'PageSpeed Insights', description: '表示速度・モバイル品質・SEO基本診断' },
-        google_ads: { label: 'Google広告', description: '実証後に追加する広告分析オプション' },
+        google_ads: { label: 'Google広告', description: '広告費・クリック・成果・キャンペーン分析' },
       };
       return map[provider] || { label: provider || '不明な連携', description: '外部サービス連携' };
     }
