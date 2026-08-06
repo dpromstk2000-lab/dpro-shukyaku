@@ -187,6 +187,20 @@
     .badge.wait { color: var(--warn); background: var(--warn-soft); }
     .badge.off { color: var(--muted); background: #edf0ef; }
     .badge.bad { color: var(--danger); background: var(--danger-soft); }
+    .score-good { color: var(--brand-2); }
+    .score-warn { color: var(--warn); }
+    .score-bad { color: var(--danger); }
+    .diagnostic-controls { display:grid; grid-template-columns:minmax(240px,1fr) 190px auto auto; gap:12px; align-items:end; }
+    .diagnostic-controls label { display:grid; gap:6px; color:var(--muted); font-size:.78rem; font-weight:800; }
+    .diagnostic-controls select { min-height:48px; padding:10px 12px; border:1px solid #bdcec6; border-radius:11px; background:#fff; color:var(--ink); }
+    .metric-mini-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+    .metric-mini { padding:15px; border-radius:13px; background:var(--surface-soft); border:1px solid var(--line); }
+    .metric-mini span { display:block; color:var(--muted); font-size:.72rem; font-weight:750; }
+    .metric-mini strong { display:block; margin-top:5px; font-size:1.18rem; }
+    .issue-description { max-width:580px; white-space:normal; line-height:1.55; }
+    @media (max-width: 980px) { .diagnostic-controls { grid-template-columns:1fr 1fr; } .metric-mini-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 620px) { .diagnostic-controls { grid-template-columns:1fr; } .metric-mini-grid { grid-template-columns:1fr; } }
+
     .list { display: grid; gap: 10px; }
     .list-row { display: flex; justify-content: space-between; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid #e8efeb; }
     .list-row:last-child { border-bottom: 0; }
@@ -304,7 +318,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-6</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-7</p>
         </div>
       </div>
       <div class="top-actions">
@@ -425,6 +439,7 @@
         <button class="nav-button" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
         <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
+        <button class="nav-button" type="button" data-view="pagespeed"><span class="nav-icon">速</span>ページ診断</button>
         <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
         <button class="nav-button locked" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
         <div class="nav-section">システム</div>
@@ -463,9 +478,9 @@
             <article class="card">
               <div class="card-title-row"><h2 class="card-title">次に行う作業</h2><span class="badge wait">準備段階</span></div>
               <div class="steps">
-                <div class="step"><div class="step-title">Search Consoleの検索データを改善へ使う</div><div class="step-sub">表示された検索語とページを確認し、優先ページを決めます。</div></div>
-                <div class="step"><div class="step-title">GA4プロパティを選択して同期</div><div class="step-sub">訪問からLINE相談・デモ閲覧までの流れをつなぎます。</div></div>
-                <div class="step"><div class="step-title">地域・サービスページを改善</div><div class="step-sub">取得した数値をもとに毎週3件以内の改善作業へ絞ります。</div></div>
+                <div class="step"><div class="step-title">検索とアクセスの数値を確認</div><div class="step-sub">Search ConsoleとGA4から、優先して直すページを決めます。</div></div>
+                <div class="step"><div class="step-title">PageSpeedでページを診断</div><div class="step-sub">スマートフォンとPCの速度・使いやすさ・SEO基本状態を確認します。</div></div>
+                <div class="step"><div class="step-title">改善作業を3件以内へ絞る</div><div class="step-sub">診断結果をもとに、効果が大きい作業から実行します。</div></div>
               </div>
             </article>
           </div>
@@ -554,6 +569,63 @@
           </article>
         </section>
 
+        <section id="view-pagespeed" class="view" hidden>
+          <div class="page-head">
+            <div><h1>ページ診断</h1><p>PageSpeed Insightsで表示速度・使いやすさ・SEOの基本状態を確認します。</p></div>
+            <div class="page-actions"><button id="pagespeedRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+
+          <article class="card">
+            <div class="card-title-row"><h2 class="card-title">診断するページ</h2><span id="pagespeedConfigBadge" class="badge wait">設定確認中</span></div>
+            <div class="diagnostic-controls">
+              <label>対象ページ<select id="pagespeedPageSelect"><option value="">ページを読み込んでいます</option></select></label>
+              <label>表示端末<select id="pagespeedStrategySelect"><option value="mobile">スマートフォン</option><option value="desktop">PC</option></select></label>
+              <button id="pagespeedRunButton" class="secondary" type="button" disabled>この端末を診断</button>
+              <button id="pagespeedRunBothButton" class="secondary" type="button" disabled>スマホ・PC両方</button>
+            </div>
+            <div id="pagespeedMessage" class="notice info section-space">PageSpeed APIの設定を確認しています。</div>
+          </article>
+
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">Performance</div><div id="pagespeedPerformance" class="metric-value">―</div><div class="metric-note">表示速度と操作応答</div></article>
+            <article class="card"><div class="metric-label">Accessibility</div><div id="pagespeedAccessibility" class="metric-value">―</div><div class="metric-note">見やすさ・操作しやすさ</div></article>
+            <article class="card"><div class="metric-label">Best Practices</div><div id="pagespeedBestPractices" class="metric-value">―</div><div class="metric-note">安全性と技術品質</div></article>
+            <article class="card"><div class="metric-label">SEO</div><div id="pagespeedSeo" class="metric-value">―</div><div class="metric-note">検索向け基本設定</div></article>
+          </div>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">表示品質の指標</h2><span id="pagespeedLatestBadge" class="badge off">未診断</span></div>
+            <div class="metric-mini-grid">
+              <div class="metric-mini"><span>LCP</span><strong id="pagespeedLcp">―</strong></div>
+              <div class="metric-mini"><span>INP</span><strong id="pagespeedInp">―</strong></div>
+              <div class="metric-mini"><span>CLS</span><strong id="pagespeedCls">―</strong></div>
+              <div class="metric-mini"><span>FCP</span><strong id="pagespeedFcp">―</strong></div>
+              <div class="metric-mini"><span>Speed Index</span><strong id="pagespeedSpeedIndex">―</strong></div>
+            </div>
+          </article>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">診断済みページ</h2><span id="pagespeedPageBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>ページ</th><th>スマホ</th><th>PC</th><th>最終診断</th></tr></thead><tbody id="pagespeedPageTable"></tbody></table></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">診断概要</h2><span id="pagespeedSummaryBadge" class="badge off">未診断</span></div>
+              <div id="pagespeedSummary" class="summary-strip"></div>
+            </article>
+          </div>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">優先して確認する項目</h2><span id="pagespeedIssueBadge" class="badge off">0件</span></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>項目</th><th>分類</th><th>現在</th><th>改善内容</th></tr></thead><tbody id="pagespeedIssueTable"></tbody></table></div>
+          </article>
+
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">診断履歴</h2><span id="pagespeedHistoryBadge" class="badge off">0件</span></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>日時</th><th>ページ</th><th>端末</th><th>Performance</th><th>SEO</th></tr></thead><tbody id="pagespeedHistoryTable"></tbody></table></div>
+          </article>
+        </section>
+
         <section id="view-tasks" class="view" hidden>
           <div class="page-head">
             <div><h1>改善タスク</h1><p>次に行う作業を絞り、完了後の効果測定へつなげます。</p></div>
@@ -602,7 +674,7 @@
         </section>
 
         <section id="view-integrations" class="view" hidden>
-          <div class="page-head"><div><h1>連携設定</h1><p>Google Search Consoleを安全に接続し、取得対象を選択します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">設定を再確認</button></div></div>
+          <div class="page-head"><div><h1>連携設定</h1><p>Google Search Console・GA4・PageSpeedを安全に接続し、取得対象を選択します。</p></div><div class="page-actions"><button id="readinessButton" class="secondary" type="button">設定を再確認</button></div></div>
           <div class="gsc-control-grid">
             <article class="card">
               <div class="card-title-row"><h2 class="card-title">Search Console接続</h2><span id="gscConnectionBadge" class="badge wait">未接続</span></div>
@@ -700,7 +772,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-6-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-7-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -716,6 +788,7 @@
       searchConsole: { status: null, properties: [], summary: null },
       ga4: { status: null, properties: [], summary: null },
       conversions: { summary: null },
+      pagespeed: { summary: null, detail: null },
       managementSummary: null,
       loadedViews: new Set(),
       editor: { type: '', id: '' },
@@ -750,6 +823,11 @@
       $('ga4PropertySaveButton').addEventListener('click', saveGa4Property);
       $('ga4SyncButton').addEventListener('click', syncGa4);
       $('conversionRefreshButton').addEventListener('click', () => loadConversionView(true));
+      $('pagespeedRefreshButton').addEventListener('click', () => loadPageSpeedView(true));
+      $('pagespeedPageSelect').addEventListener('change', () => loadPageSpeedDetail(true));
+      $('pagespeedStrategySelect').addEventListener('change', () => loadPageSpeedDetail(true));
+      $('pagespeedRunButton').addEventListener('click', () => runPageSpeed(false));
+      $('pagespeedRunBothButton').addEventListener('click', () => runPageSpeed(true));
       $('activationForm').addEventListener('submit', handleActivation);
       $('loginForm').addEventListener('submit', handleLogin);
       $('logoutTopButton').addEventListener('click', logout);
@@ -1245,6 +1323,184 @@
       return map[name] || name || '行動';
     }
 
+
+    async function loadPageSpeedView(force = false) {
+      if (!state.token) return;
+      if (!force && state.pagespeed.summary) {
+        renderPageSpeedSummary(state.pagespeed.summary);
+        return loadPageSpeedDetail(false, true);
+      }
+      setLoading(true, 'PageSpeed診断データを読み込んでいます');
+      try {
+        const data = await api('/api/pagespeed/summary', { timeout:30000 });
+        state.pagespeed.summary = data;
+        state.pagespeed.detail = null;
+        renderPageSpeedSummary(data);
+        await loadPageSpeedDetail(false, true);
+      } catch (error) {
+        $('pagespeedMessage').className = 'notice error section-space';
+        $('pagespeedMessage').textContent = error.message;
+      } finally { setLoading(false); }
+    }
+
+    function renderPageSpeedSummary(data) {
+      const stats = data.stats || {};
+      const prepared = Boolean(data.prepared);
+      $('pagespeedConfigBadge').textContent = prepared ? 'API準備済み' : 'APIキー未設定';
+      $('pagespeedConfigBadge').className = `badge ${prepared ? 'ok' : 'wait'}`;
+      $('pagespeedSummary').innerHTML = summaryItems([
+        ['登録ページ', stats.registeredPageCount ?? 0],
+        ['診断済み', stats.diagnosedPageCount ?? 0],
+        ['スマホ平均', scoreDisplay(stats.mobileAverage)],
+        ['PC平均', scoreDisplay(stats.desktopAverage)],
+        ['要改善', stats.needsAttentionCount ?? 0],
+      ]);
+      $('pagespeedSummaryBadge').textContent = data.lastSyncAt ? formatJapanDate(data.lastSyncAt) : '未診断';
+      $('pagespeedSummaryBadge').className = `badge ${data.lastSyncAt ? 'ok' : 'off'}`;
+
+      const select = $('pagespeedPageSelect');
+      const previous = select.value;
+      const pages = (data.pages || []).filter((page) => page.status === 'published');
+      select.innerHTML = pages.length
+        ? pages.map((page) => `<option value="${escapeHtml(page.id)}">${escapeHtml(page.pageName)}｜${escapeHtml(page.pageUrl)}</option>`).join('')
+        : '<option value="">公開中の登録ページがありません</option>';
+      if (pages.some((page) => page.id === previous)) select.value = previous;
+      else {
+        const diagnosed = pages.find((page) => page.mobile || page.desktop);
+        if (diagnosed) select.value = diagnosed.id;
+      }
+      const runnable = prepared && Boolean(select.value);
+      $('pagespeedRunButton').disabled = !runnable;
+      $('pagespeedRunBothButton').disabled = !runnable;
+      select.disabled = !pages.length;
+
+      $('pagespeedMessage').className = `notice ${!prepared ? 'warn' : data.lastSyncAt ? 'success' : 'info'} section-space`;
+      $('pagespeedMessage').textContent = !prepared
+        ? 'PageSpeed APIキーをCloudflareへ登録すると診断できます。'
+        : !pages.length
+          ? 'ページ管理で公開中のページを登録してください。'
+          : data.lastSyncAt
+            ? `保存済みの診断結果を表示しています。最終診断：${formatJapanDate(data.lastSyncAt)}。毎週月曜日の午前3時にスマートフォン診断を自動実行します。`
+            : '対象ページと端末を選び、初回診断を実行してください。診断には30秒〜1分程度かかる場合があります。';
+
+      const diagnosedRows = (data.pages || []).filter((page) => page.mobile || page.desktop);
+      $('pagespeedPageBadge').textContent = `${diagnosedRows.length}件`;
+      $('pagespeedPageBadge').className = `badge ${diagnosedRows.length ? 'ok' : 'off'}`;
+      $('pagespeedPageTable').innerHTML = diagnosedRows.length ? diagnosedRows.map((page) => {
+        const last = [page.mobile?.runAt, page.desktop?.runAt].filter(Boolean).sort().reverse()[0];
+        return `<tr><td><div class="table-main">${escapeHtml(page.pageName)}</div><div class="table-sub">${escapeHtml(page.pageUrl)}</div></td><td>${scoreBadge(page.mobile?.performanceScore)}</td><td>${scoreBadge(page.desktop?.performanceScore)}</td><td>${last ? escapeHtml(formatJapanDate(last)) : '―'}</td></tr>`;
+      }).join('') : emptyTableRow(4, '診断済みページはありません。');
+
+      const history = data.recentRuns || [];
+      $('pagespeedHistoryBadge').textContent = `${history.length}件`;
+      $('pagespeedHistoryBadge').className = `badge ${history.length ? 'ok' : 'off'}`;
+      $('pagespeedHistoryTable').innerHTML = history.length ? history.map((row) => `<tr><td>${escapeHtml(formatJapanDate(row.runAt))}</td><td><div class="table-main">${escapeHtml(row.pageName || '登録ページ')}</div><div class="table-sub">${escapeHtml(row.pageUrl || '')}</div></td><td>${escapeHtml(strategyLabel(row.strategy))}</td><td>${scoreBadge(row.performanceScore)}</td><td>${scoreBadge(row.seoScore)}</td></tr>`).join('') : emptyTableRow(5, '診断履歴はありません。');
+    }
+
+    async function loadPageSpeedDetail(force = false, silent = false) {
+      const landingPageId = $('pagespeedPageSelect').value;
+      const strategy = $('pagespeedStrategySelect').value || 'mobile';
+      if (!landingPageId) return renderPageSpeedDetail(null);
+      if (!force && state.pagespeed.detail?.page?.id === landingPageId && state.pagespeed.detail?.strategy === strategy) {
+        return renderPageSpeedDetail(state.pagespeed.detail);
+      }
+      if (!silent) setLoading(true, '診断結果を読み込んでいます');
+      try {
+        const data = await api(`/api/pagespeed/detail?landingPageId=${encodeURIComponent(landingPageId)}&strategy=${encodeURIComponent(strategy)}`, { timeout:30000 });
+        state.pagespeed.detail = data;
+        renderPageSpeedDetail(data);
+      } catch (error) {
+        renderPageSpeedDetail(null);
+        toast(error.message, 'error');
+      } finally { if (!silent) setLoading(false); }
+    }
+
+    function renderPageSpeedDetail(data) {
+      const result = data?.result || null;
+      setScoreNode('pagespeedPerformance', result?.performanceScore);
+      setScoreNode('pagespeedAccessibility', result?.accessibilityScore);
+      setScoreNode('pagespeedBestPractices', result?.bestPracticesScore);
+      setScoreNode('pagespeedSeo', result?.seoScore);
+      $('pagespeedLcp').textContent = formatMilliseconds(result?.largestContentfulPaintMs);
+      $('pagespeedInp').textContent = formatMilliseconds(result?.interactionToNextPaintMs);
+      $('pagespeedCls').textContent = formatCls(result?.cumulativeLayoutShift);
+      $('pagespeedFcp').textContent = formatMilliseconds(result?.firstContentfulPaintMs);
+      $('pagespeedSpeedIndex').textContent = formatMilliseconds(result?.speedIndexMs);
+      $('pagespeedLatestBadge').textContent = result?.runAt ? `${strategyLabel(result.strategy)}｜${formatJapanDate(result.runAt)}` : '未診断';
+      $('pagespeedLatestBadge').className = `badge ${result ? scoreBadgeClass(result.performanceScore) : 'off'}`;
+      const issues = result?.rawSummary?.opportunities || [];
+      $('pagespeedIssueBadge').textContent = `${issues.length}件`;
+      $('pagespeedIssueBadge').className = `badge ${issues.length ? 'wait' : result ? 'ok' : 'off'}`;
+      $('pagespeedIssueTable').innerHTML = issues.length ? issues.map((item) => `<tr><td><div class="table-main">${escapeHtml(item.title || item.id)}</div><div class="table-sub">${escapeHtml(item.displayValue || '')}</div></td><td>${escapeHtml((item.categories || []).map(pageSpeedCategoryLabel).join('／') || '技術')}</td><td>${scoreBadge(item.score)}</td><td class="issue-description">${escapeHtml(item.description || '詳細は診断結果を確認してください。')}</td></tr>`).join('') : emptyTableRow(4, result ? '大きな改善候補は検出されませんでした。' : 'この端末の診断結果はまだありません。');
+    }
+
+    async function runPageSpeed(both) {
+      const landingPageId = $('pagespeedPageSelect').value;
+      const strategy = both ? 'both' : ($('pagespeedStrategySelect').value || 'mobile');
+      if (!landingPageId) return toast('診断するページを選択してください。', 'error');
+      setLoading(true, both ? 'スマートフォンとPCを診断しています。1分程度かかる場合があります' : `${strategyLabel(strategy)}を診断しています。しばらくお待ちください`);
+      try {
+        const data = await api('/api/pagespeed/run', { method:'POST', body:{ landingPageId, strategy }, timeout:180000 });
+        const succeeded = data.results?.length || 0;
+        const failed = data.errors?.length || 0;
+        toast(failed ? `${succeeded}件成功、${failed}件は再確認が必要です。` : `${succeeded}件のPageSpeed診断が完了しました。`, failed ? 'warn' : 'success');
+        state.pagespeed.summary = null;
+        state.pagespeed.detail = null;
+        await Promise.allSettled([loadPageSpeedView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    function setScoreNode(id, value) {
+      const node = $(id);
+      node.textContent = scoreDisplay(value);
+      node.className = `metric-value ${scoreToneClass(value)}`;
+    }
+
+    function scoreDisplay(value) {
+      if (value === null || value === undefined || value === '') return '―';
+      return Number.isFinite(Number(value)) ? String(Math.round(Number(value))) : '―';
+    }
+
+    function scoreToneClass(value) {
+      if (value === null || value === undefined || value === '') return '';
+      const score = Number(value);
+      if (!Number.isFinite(score)) return '';
+      return score >= 90 ? 'score-good' : score >= 50 ? 'score-warn' : 'score-bad';
+    }
+
+    function scoreBadgeClass(value) {
+      if (value === null || value === undefined || value === '') return 'off';
+      const score = Number(value);
+      if (!Number.isFinite(score)) return 'off';
+      return score >= 90 ? 'ok' : score >= 50 ? 'wait' : 'bad';
+    }
+
+    function scoreBadge(value) {
+      return `<span class="badge ${scoreBadgeClass(value)}">${escapeHtml(scoreDisplay(value))}</span>`;
+    }
+
+    function formatMilliseconds(value) {
+      if (value === null || value === undefined || value === '') return '―';
+      const number = Number(value);
+      if (!Number.isFinite(number)) return '―';
+      return number >= 1000 ? `${(number / 1000).toFixed(2)}秒` : `${Math.round(number)}ms`;
+    }
+
+    function formatCls(value) {
+      if (value === null || value === undefined || value === '') return '―';
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(3) : '―';
+    }
+
+    function strategyLabel(value) {
+      return value === 'desktop' ? 'PC' : value === 'both' ? 'スマホ・PC' : 'スマートフォン';
+    }
+
+    function pageSpeedCategoryLabel(value) {
+      return ({ performance:'速度', accessibility:'使いやすさ', 'best-practices':'技術品質', seo:'SEO' })[value] || value;
+    }
+
     async function loadSearchConsoleView(force = false) {
       if (!state.token) return;
       if (!force && state.searchConsole.summary) return renderSearchConsoleSummary(state.searchConsole.summary);
@@ -1329,6 +1585,7 @@
         ['CORS制限', h?.corsRestricted ? '有効' : '要確認'],
         ['service_role非公開', h?.serviceRoleHidden ? '確認済み' : '要確認'],
         ['Google OAuth', h?.googleOauthPrepared ? '準備済み' : '未設定（現段階では正常）'],
+        ['PageSpeed API', h?.pagespeedPrepared ? '準備済み' : '未設定'],
         ['最終確認', h?.checkedAt ? formatJapanDate(h.checkedAt) : '未確認'],
       ];
       $('systemTableBody').innerHTML = rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('');
@@ -1342,7 +1599,7 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'tasks', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'pagespeed', 'tasks', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
@@ -1351,6 +1608,7 @@
         if (view === 'integrations') loadGoogleReadiness().catch((error) => toast(error.message, 'error'));
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
+        if (view === 'pagespeed') loadPageSpeedView().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
         return;
       }
@@ -1467,7 +1725,7 @@
         <td><span class="badge ${item.status === 'published' ? 'ok' : item.status === 'draft' ? 'wait' : 'off'}">${escapeHtml(optionLabel(PAGE_STATUS_OPTIONS,item.status,item.status))}</span></td>
         <td><span class="badge ${indexBadge(item.indexing_status)}">${escapeHtml(optionLabel(INDEX_STATUS_OPTIONS,item.indexing_status,item.indexing_status))}</span></td>
         <td>${escapeHtml(formatJapanDate(item.updated_at))}</td>
-        <td><div class="row-actions"><button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('page','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('page','${item.id}')">削除</button></div></td></tr>`).join('') : emptyTableRow(6, '登録ページがありません。');
+        <td><div class="row-actions">${item.status === 'published' ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.auditPage('${item.id}')">診断</button>` : ''}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('page','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('page','${item.id}')">削除</button></div></td></tr>`).join('') : emptyTableRow(6, '登録ページがありません。');
     }
 
     function renderTasks() {
@@ -1590,6 +1848,18 @@
         if (item) openEditor(type,item);
       },
       remove(type,id) { deleteManagementItem(type,id); },
+      auditPage(id) {
+        const button = document.querySelector('[data-view="pagespeed"]');
+        if (!button) return;
+        switchView('pagespeed', button);
+        const apply = () => {
+          if ([...$('pagespeedPageSelect').options].some((option) => option.value === id)) {
+            $('pagespeedPageSelect').value = id;
+            loadPageSpeedDetail(true).catch((error) => toast(error.message, 'error'));
+          }
+        };
+        if (state.pagespeed.summary) apply(); else loadPageSpeedView(true).then(apply).catch((error) => toast(error.message, 'error'));
+      },
     };
 
     function showDashboard() {
@@ -1770,7 +2040,7 @@
     function featureLabel(key) {
       const map = {
         search_console: 'Search Console連携', ga4: 'GA4連携', business_profile: 'Googleマップ管理',
-        page_audit: 'ページ診断', keyword_management: 'キーワード管理', conversion_tracking: '問い合わせ計測',
+        page_audit: 'ページ診断', pagespeed: 'PageSpeedページ診断', keyword_management: 'キーワード管理', conversion_tracking: '問い合わせ計測',
         recommendations: '改善提案', weekly_report: '週次レポート', monthly_report: '月次レポート',
         google_ads: 'Google広告分析', multi_location: '複数店舗管理'
       };
