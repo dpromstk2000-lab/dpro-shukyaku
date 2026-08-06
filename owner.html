@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f5b45">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>DPRO集客ナビ｜DPRO SHOP 管理画面</title>
+  <title>DPRO集客ナビ｜管理画面</title>
   <style>
     :root {
       --bg: #f4f7f5;
@@ -362,6 +362,36 @@
     @media (max-width: 900px) { .gsc-control-grid { grid-template-columns:1fr; } .sync-form { grid-template-columns:1fr 1fr; } .sync-form .secondary { grid-column:1/-1; } }
     @media (max-width: 620px) { .sync-form { grid-template-columns:1fr; } .sync-form .secondary { grid-column:auto; } }
 
+
+    .company-admin-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
+    .company-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .company-form-grid .field { margin:0; }
+    .company-form-grid .wide { grid-column:1 / -1; }
+    .feature-switch-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .feature-switch {
+      display:flex; align-items:flex-start; gap:10px; min-height:48px; padding:10px 12px;
+      border:1px solid var(--line); border-radius:11px; background:var(--surface-soft);
+      font-size:.82rem; font-weight:750;
+    }
+    .feature-switch input { width:19px; height:19px; margin-top:2px; accent-color:var(--brand); }
+    .company-table-row { cursor:pointer; }
+    .company-table-row:hover { background:var(--surface-soft); }
+    .company-table-row.selected { background:var(--brand-soft); }
+    .company-detail-grid { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:18px; }
+    .onboarding-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .onboarding-step { padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--surface-soft); }
+    .onboarding-step.done { background:var(--brand-soft); border-color:#bdd8cd; }
+    .onboarding-step strong { display:block; font-size:.86rem; }
+    .onboarding-step span { color:var(--muted); font-size:.72rem; }
+    .credential-note { padding:12px 14px; border-radius:12px; background:var(--warn-soft); color:#72500b; border:1px solid #f2d78c; font-size:.8rem; }
+    @media (max-width: 1050px) {
+      .company-admin-grid, .company-detail-grid { grid-template-columns:1fr; }
+      .onboarding-steps { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width: 680px) {
+      .company-form-grid, .feature-switch-grid, .onboarding-steps { grid-template-columns:1fr; }
+      .company-form-grid .wide { grid-column:auto; }
+    }
   </style>
 </head>
 <body>
@@ -372,7 +402,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-11</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-12</p>
         </div>
       </div>
       <div class="top-actions">
@@ -388,7 +418,7 @@
     <main id="preauthArea" class="preauth-wrap">
       <section class="hero">
         <div class="hero-copy">
-          <div class="eyebrow">DPRO SHOP 実証運用</div>
+          <div class="eyebrow">DPRO集客ナビ</div>
           <h1>検索から相談・契約までを、ひとつの画面で育てる。</h1>
           <p>Google検索、ホームページ、LINE相談をつなぎ、次に行う改善作業を明確にするDPRO内部管理システムです。</p>
           <div class="hero-points">
@@ -458,7 +488,7 @@
 
         <article id="loginCard" class="auth-card">
           <h2>管理画面へログイン</h2>
-          <p>DPRO SHOP管理者のユーザーコードとパスワードを入力してください。</p>
+          <p>契約会社ごとに発行されたユーザーコードとパスワードを入力してください。</p>
           <form id="loginForm" novalidate>
             <div class="field">
               <label for="loginUserCode">ユーザーコード</label>
@@ -500,6 +530,8 @@
         <div class="nav-section">システム</div>
         <button class="nav-button" type="button" data-view="integrations"><span class="nav-icon">連</span>連携設定</button>
         <button class="nav-button" type="button" data-view="system"><span class="nav-icon">設</span>システム状態</button>
+        <div id="companyAdminSection" class="nav-section" hidden>DPRO管理</div>
+        <button id="companyAdminNav" class="nav-button" type="button" data-view="companies" hidden><span class="nav-icon">社</span>契約会社・初期設定</button>
         <div class="sidebar-foot">
           <div class="session-box">セッション期限<br><strong id="sessionRemaining">―</strong></div>
           <button id="logoutSideButton" class="danger-button" style="width:100%;margin-top:13px" type="button">ログアウト</button>
@@ -520,10 +552,15 @@
 
           <div class="grid-4">
             <article class="card"><div class="metric-label">登録キーワード</div><div id="metricKeywords" class="metric-value">―</div><div class="metric-note">初期登録済みの目標キーワード</div></article>
-            <article class="card"><div class="metric-label">稼働サイト</div><div id="metricSites" class="metric-value">―</div><div class="metric-note">DPRO SHOP管理対象サイト</div></article>
+            <article class="card"><div class="metric-label">稼働サイト</div><div id="metricSites" class="metric-value">―</div><div class="metric-note">会社の管理対象サイト</div></article>
             <article class="card"><div class="metric-label">接続済み連携</div><div id="metricIntegrations" class="metric-value">―</div><div class="metric-note">Google等の外部サービス</div></article>
             <article class="card"><div class="metric-label">システム状態</div><div id="metricSystem" class="metric-value" style="font-size:1.55rem">確認中</div><div id="metricSystemNote" class="metric-note">WorkerとDBを確認しています</div></article>
           </div>
+
+          <article id="onboardingPanel" class="card section-space" hidden>
+            <div class="card-title-row"><h2 class="card-title">初期設定の進み具合</h2><span id="onboardingBadge" class="badge wait">準備中</span></div>
+            <div id="onboardingSteps" class="onboarding-steps"></div>
+          </article>
 
           <div class="grid-2 section-space">
             <article class="card">
@@ -588,7 +625,7 @@
             <article class="card"><div class="metric-label">デモ閲覧</div><div id="conversionDemoViews" class="metric-value">―</div><div class="metric-note">DPRO製品サイトへの移動</div></article>
             <article class="card"><div class="metric-label">行動率</div><div id="conversionRate" class="metric-value">―</div><div class="metric-note">計測行動 ÷ セッション</div></article>
           </div>
-          <div id="conversionMessage" class="notice info section-space">GA4を接続し、DPRO SHOPサイトの計測を開始します。</div>
+          <div id="conversionMessage" class="notice info section-space">GA4を接続し、管理サイトの計測を開始します。</div>
           <div class="grid-2 section-space">
             <article class="card">
               <div class="card-title-row"><h2 class="card-title">行動が発生したページ</h2><span id="conversionPageBadge" class="badge off">0件</span></div>
@@ -607,7 +644,7 @@
 
         <section id="view-pages" class="view" hidden>
           <div class="page-head">
-            <div><h1>ページ管理</h1><p>DPRO SHOPの集客ページとGoogle登録状態を管理します。</p></div>
+            <div><h1>ページ管理</h1><p>管理サイトの集客ページとGoogle登録状態を管理します。</p></div>
             <div class="page-actions"><button id="addPageButton" class="secondary" type="button">ページを追加</button></div>
           </div>
           <div id="pageSummary" class="summary-strip"></div>
@@ -1018,6 +1055,73 @@
           </article>
         </section>
 
+
+        <section id="view-companies" class="view" hidden>
+          <div class="page-head">
+            <div><h1>契約会社・初期設定</h1><p>DPROが契約会社を追加し、管理者・サイト・機能を会社ごとに分離して設定します。</p></div>
+            <div class="page-actions"><button id="companyRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+
+          <div class="grid-4">
+            <article class="card"><div class="metric-label">契約会社</div><div id="companyMetricTotal" class="metric-value">0</div><div class="metric-note">DPRO SHOPを除く登録数</div></article>
+            <article class="card"><div class="metric-label">稼働中</div><div id="companyMetricActive" class="metric-value">0</div><div class="metric-note">ログイン・運用可能</div></article>
+            <article class="card"><div class="metric-label">初期設定中</div><div id="companyMetricPending" class="metric-value">0</div><div class="metric-note">接続・キーワード準備中</div></article>
+            <article class="card"><div class="metric-label">停止中</div><div id="companyMetricSuspended" class="metric-value">0</div><div class="metric-note">ログイン停止済み</div></article>
+          </div>
+
+          <div class="company-admin-grid section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">新しい契約会社を追加</h2><span class="badge ok">一括初期設定</span></div>
+              <form id="companyCreateForm" novalidate>
+                <div class="company-form-grid">
+                  <div class="field"><label for="companyCreateName">会社・店舗名</label><input id="companyCreateName" class="input" required placeholder="例：○○ペットサロン"></div>
+                  <div class="field"><label for="companyCreateCode">会社コード</label><input id="companyCreateCode" class="input" required placeholder="例：sample_pet"></div>
+                  <div class="field wide"><label for="companyCreateUrl">公式サイトURL</label><input id="companyCreateUrl" class="input" type="url" required placeholder="https://example.com/"></div>
+                  <div class="field"><label for="companyCreateContactEmail">会社連絡メール</label><input id="companyCreateContactEmail" class="input" type="email" placeholder="owner@example.com"></div>
+                  <div class="field"><label for="companyCreatePlan">利用プラン</label><select id="companyCreatePlan" class="input"><option value="starter">スターター</option><option value="standard" selected>スタンダード</option><option value="growth">グロース</option><option value="custom">カスタム</option></select></div>
+                  <div class="field"><label for="companyCreateAdminName">管理者表示名</label><input id="companyCreateAdminName" class="input" required placeholder="例：○○店 管理者"></div>
+                  <div class="field"><label for="companyCreateAdminEmail">管理者メール</label><input id="companyCreateAdminEmail" class="input" type="email" placeholder="owner@example.com"></div>
+                  <div class="field"><label for="companyCreateUserCode">管理者ユーザーコード</label><input id="companyCreateUserCode" class="input" required placeholder="例：sample_pet_admin"></div>
+                  <div class="field"><label for="companyCreatePassword">初期パスワード</label><input id="companyCreatePassword" class="input" type="password" required minlength="8" maxlength="32" placeholder="英字と数字 8〜32文字"></div>
+                  <div class="field wide"><label>利用機能</label><div id="companyCreateFeatures" class="feature-switch-grid"></div></div>
+                  <div class="field wide"><label for="companyCreateNotes">社内メモ</label><input id="companyCreateNotes" class="input" placeholder="契約内容・確認事項など"></div>
+                </div>
+                <div class="credential-note section-space">初期パスワードは保存後に再表示できません。契約会社へ安全な方法で伝えてください。</div>
+                <button id="companyCreateButton" class="primary section-space" type="submit">契約会社を作成する</button>
+                <div id="companyCreateMessage" aria-live="polite"></div>
+              </form>
+            </article>
+
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">登録済み契約会社</h2><span id="companyListBadge" class="badge off">0件</span></div>
+              <input id="companySearchInput" class="input" type="search" placeholder="会社名・会社コードで検索">
+              <div class="table-wrap section-space"><table class="data-table"><thead><tr><th>会社</th><th>状態</th><th>初期設定</th><th>機能</th></tr></thead><tbody id="companyTableBody"></tbody></table></div>
+            </article>
+          </div>
+
+          <article id="companyDetailCard" class="card section-space" hidden>
+            <div class="card-title-row"><div><h2 id="companyDetailTitle" class="card-title">契約会社の設定</h2><div id="companyDetailSub" class="metric-note"></div></div><span id="companyDetailBadge" class="badge wait">未選択</span></div>
+            <div class="company-detail-grid">
+              <div>
+                <div class="company-form-grid">
+                  <div class="field"><label for="companyEditStatus">会社状態</label><select id="companyEditStatus" class="input"><option value="active">稼働中</option><option value="suspended">停止中</option><option value="archived">保管済み</option></select></div>
+                  <div class="field"><label for="companyEditSetupStatus">初期設定状態</label><select id="companyEditSetupStatus" class="input"><option value="draft">準備前</option><option value="ready">初期設定中</option><option value="active">運用開始</option><option value="suspended">保留</option></select></div>
+                  <div class="field"><label for="companyEditPlan">利用プラン</label><select id="companyEditPlan" class="input"><option value="starter">スターター</option><option value="standard">スタンダード</option><option value="growth">グロース</option><option value="custom">カスタム</option></select></div>
+                  <div class="field wide"><label for="companyEditNotes">社内メモ</label><input id="companyEditNotes" class="input"></div>
+                </div>
+                <button id="companyBasicSaveButton" class="secondary section-space" type="button">基本設定を保存</button>
+                <div class="section-space"><h3 style="margin:0 0 10px">管理者パスワード再発行</h3><div class="field"><input id="companyResetPassword" class="input" type="password" placeholder="英字と数字 8〜32文字"></div><button id="companyResetPasswordButton" class="danger-button" type="button">パスワードを再設定</button></div>
+              </div>
+              <div>
+                <h3 style="margin:0 0 10px">利用機能のON・OFF</h3>
+                <div id="companyEditFeatures" class="feature-switch-grid"></div>
+                <button id="companyFeatureSaveButton" class="secondary section-space" type="button">機能設定を保存</button>
+                <div class="section-space"><h3 style="margin:0 0 10px">初期設定の確認</h3><div id="companyDetailSteps" class="onboarding-steps"></div></div>
+              </div>
+            </div>
+          </article>
+        </section>
+
         <section id="view-system" class="view" hidden>
           <div class="page-head"><div><h1>システム状態</h1><p>Worker、Supabase、セッション、安全設定を確認します。</p></div><div class="page-actions"><button id="systemRefreshButton" class="secondary" type="button">再確認</button></div></div>
           <article class="card">
@@ -1052,12 +1156,14 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-11-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-12-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
       health: null,
       bootstrap: null,
+      featureMap: {},
+      companies: { items: [], selected: null, catalog: null },
       token: '',
       expiresAt: '',
       currentView: 'dashboard',
@@ -1156,6 +1262,16 @@
       $('taskSearch').addEventListener('input', renderTasks);
       $('taskStatusFilter').addEventListener('change', renderTasks);
       $('taskPriorityFilter').addEventListener('change', renderTasks);
+      $('companyRefreshButton').addEventListener('click', () => loadCompaniesView(true));
+      $('companyCreateForm').addEventListener('submit', createCompany);
+      $('companyCreatePlan').addEventListener('change', applyCreatePlanFeatures);
+      $('companyCreateCode').addEventListener('input', suggestCompanyAdminCode);
+      $('companyCreateUserCode').addEventListener('input', () => { $('companyCreateUserCode').dataset.manual = '1'; });
+      $('companySearchInput').addEventListener('input', renderCompanyTable);
+      $('companyTableBody').addEventListener('click', handleCompanyTableClick);
+      $('companyBasicSaveButton').addEventListener('click', saveCompanyBasicSettings);
+      $('companyFeatureSaveButton').addEventListener('click', saveCompanyFeatures);
+      $('companyResetPasswordButton').addEventListener('click', resetCompanyPassword);
 
       document.querySelectorAll('.toggle-password').forEach((button) => {
         button.addEventListener('click', () => {
@@ -1317,9 +1433,11 @@
     }
 
     function renderBootstrap(data) {
-      const companyName = data.company?.company_name || 'DPRO SHOP';
+      const companyName = data.company?.company_name || data.company?.companyName || '契約会社';
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
+      state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-12`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -1331,6 +1449,8 @@
       renderIntegrations(data.integrations || []);
       renderSites(data.sites || []);
       renderFeatureFlags(data.featureFlags || []);
+      applyFeatureVisibility(data);
+      renderOnboarding(data);
       renderSystemTable();
     }
 
@@ -1360,6 +1480,196 @@
         <div class="list-row"><div class="list-main"><div class="list-title">${escapeHtml(featureLabel(flag.feature_key))}</div><div class="list-sub">${escapeHtml(flag.feature_key)}</div></div><span class="badge ${flag.enabled ? 'ok' : 'off'}">${flag.enabled ? '利用可能' : '停止中'}</span></div>
       `).join('') : '<div class="empty-panel">機能設定がありません。</div>';
     }
+
+
+    const COMPANY_FEATURE_CATALOG = [
+      ['dashboard','ダッシュボード'],['keyword_management','キーワード管理'],['page_management','ページ管理'],
+      ['conversion_tracking','アクセス・問い合わせ計測'],['improvement_tasks','改善タスク'],
+      ['weekly_reports','週次レポート'],['monthly_reports','月次レポート'],['pagespeed','ページ診断'],
+      ['search_console','Search Console'],['ga4','Google Analytics 4'],
+      ['business_profile_manual','Googleマップ手動管理'],['business_profile_api','GoogleマップAPI連携'],
+      ['google_ads','Google広告分析'],['multi_location','複数店舗管理']
+    ];
+    const COMPANY_PLAN_FEATURES = {
+      starter:['dashboard','keyword_management','page_management','improvement_tasks','weekly_reports','monthly_reports','pagespeed','business_profile_manual'],
+      standard:['dashboard','keyword_management','page_management','conversion_tracking','improvement_tasks','weekly_reports','monthly_reports','pagespeed','search_console','ga4','business_profile_manual'],
+      growth:['dashboard','keyword_management','page_management','conversion_tracking','improvement_tasks','weekly_reports','monthly_reports','pagespeed','search_console','ga4','business_profile_manual','business_profile_api','google_ads','multi_location'],
+      custom:[]
+    };
+    const VIEW_FEATURES = {
+      dashboard:['dashboard'],keywords:['keyword_management'],'search-console':['search_console'],pages:['page_management'],
+      conversions:['conversion_tracking'],maps:['business_profile_manual','business_profile_api'],ads:['google_ads'],
+      pagespeed:['pagespeed'],tasks:['improvement_tasks'],reports:['weekly_reports','monthly_reports']
+    };
+
+    function applyFeatureVisibility(data) {
+      document.querySelectorAll('.nav-button[data-view]').forEach((button) => {
+        const view=button.dataset.view;
+        if (view==='companies') return;
+        const keys=VIEW_FEATURES[view];
+        button.hidden=Boolean(keys && !keys.some((key)=>state.featureMap[key]));
+      });
+      const internal=Boolean(data.permissions?.internalAdmin);
+      $('companyAdminSection').hidden=!internal;
+      $('companyAdminNav').hidden=!internal;
+      if (state.currentView && document.querySelector(`.nav-button[data-view="${state.currentView}"]`)?.hidden) {
+        const dashboardButton=document.querySelector('.nav-button[data-view="dashboard"]');
+        if (dashboardButton) switchView('dashboard',dashboardButton);
+      }
+    }
+
+    function renderOnboarding(data) {
+      const onboarding=data.onboarding;
+      if (!onboarding || data.company?.isInternal || data.company?.is_internal) { $('onboardingPanel').hidden=true; return; }
+      $('onboardingPanel').hidden=false;
+      const steps=onboarding.setup_steps || onboarding.setupSteps || {};
+      const connected=(data.integrations||[]).some((item)=>item.connection_status==='connected');
+      const normalized={...steps,googleConnected:Boolean(steps.googleConnected||connected),keywordsRegistered:Boolean(steps.keywordsRegistered||Number(data.summary?.targetKeywordCount)>0)};
+      const setupStatus=onboarding.setup_status || onboarding.setupStatus || 'draft';
+      $('onboardingBadge').textContent=setupStatus==='active' ? '運用中' : setupStatus==='ready' ? '初期設定中' : '準備中';
+      $('onboardingBadge').className=`badge ${setupStatus==='active' ? 'ok':'wait'}`;
+      renderOnboardingSteps('onboardingSteps',normalized);
+    }
+
+    function renderOnboardingSteps(targetId, steps) {
+      const items=[
+        ['companyCreated','会社登録','会社情報を作成'],['siteCreated','サイト登録','管理URLを分離'],['adminIssued','管理者発行','ログイン情報を発行'],
+        ['googleConnected','Google連携','検索・アクセスを接続'],['keywordsRegistered','キーワード','目標語句を登録'],['firstReportCreated','初回レポート','週次・月次を作成']
+      ];
+      $(targetId).innerHTML=items.map(([key,title,note])=>`<div class="onboarding-step ${steps?.[key] ? 'done':''}"><strong>${steps?.[key] ? '完了 ' : '未完了 '}${escapeHtml(title)}</strong><span>${escapeHtml(note)}</span></div>`).join('');
+    }
+
+    function featureCheckboxHtml(target, enabled=[]) {
+      const set=new Set(enabled);
+      return COMPANY_FEATURE_CATALOG.map(([key,label])=>`<label class="feature-switch"><input type="checkbox" data-feature-target="${target}" value="${key}" ${set.has(key) ? 'checked':''} ${key==='dashboard' ? 'disabled':''}><span>${escapeHtml(label)}</span></label>`).join('');
+    }
+
+    function selectedFeatures(target) {
+      const values=[...document.querySelectorAll(`input[data-feature-target="${target}"]:checked`)].map((item)=>item.value);
+      if (!values.includes('dashboard')) values.unshift('dashboard');
+      return values;
+    }
+
+    function applyCreatePlanFeatures() {
+      const plan=$('companyCreatePlan').value;
+      $('companyCreateFeatures').innerHTML=featureCheckboxHtml('create',COMPANY_PLAN_FEATURES[plan]||[]);
+    }
+
+    function suggestCompanyAdminCode() {
+      const code=String($('companyCreateCode').value||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,50);
+      if (!$('companyCreateUserCode').dataset.manual) $('companyCreateUserCode').value=code ? `${code}_admin` : '';
+    }
+
+    async function loadCompaniesView(force=false) {
+      if (!state.bootstrap?.permissions?.internalAdmin) return;
+      if (!force && state.companies.items.length) return renderCompanyTable();
+      setLoading(true,'契約会社を読み込んでいます');
+      try {
+        const [companies,catalog]=await Promise.all([api('/api/admin/companies'),api('/api/admin/feature-catalog')]);
+        state.companies.items=companies.items||[];
+        state.companies.catalog=catalog;
+        const summary=companies.summary||{};
+        $('companyMetricTotal').textContent=String(summary.total||0);
+        $('companyMetricActive').textContent=String(summary.active||0);
+        $('companyMetricPending').textContent=String(summary.pending||0);
+        $('companyMetricSuspended').textContent=String(summary.suspended||0);
+        $('companyListBadge').textContent=`${state.companies.items.filter((item)=>!item.isInternal).length}件`;
+        renderCompanyTable();
+        if (!$('companyCreateFeatures').children.length) applyCreatePlanFeatures();
+      } catch (error) { toast(error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    function renderCompanyTable() {
+      const q=String($('companySearchInput').value||'').trim().toLowerCase();
+      const items=state.companies.items.filter((item)=>!item.isInternal && (!q || `${item.companyName} ${item.companyCode}`.toLowerCase().includes(q)));
+      $('companyTableBody').innerHTML=items.length ? items.map((item)=>{
+        const setup=item.onboarding?.setupStatus||'draft';
+        return `<tr class="company-table-row ${state.companies.selected?.id===item.id ? 'selected':''}" data-company-id="${item.id}"><td><strong>${escapeHtml(item.companyName)}</strong><div class="metric-note">${escapeHtml(item.companyCode)}・${escapeHtml(item.site?.baseUrl||'URL未設定')}</div></td><td><span class="badge ${item.status==='active' ? 'ok':item.status==='suspended' ? 'wait':'off'}">${escapeHtml(companyStatusLabel(item.status))}</span></td><td><span class="badge ${setup==='active' ? 'ok':'wait'}">${escapeHtml(setupStatusLabel(setup))}</span></td><td>${Number(item.enabledFeatureCount||0)}件</td></tr>`;
+      }).join('') : '<tr><td colspan="4" class="empty-panel">契約会社はまだありません。</td></tr>';
+    }
+
+    function handleCompanyTableClick(event) {
+      const row=event.target.closest('[data-company-id]');
+      if (row) selectCompany(row.dataset.companyId);
+    }
+
+    async function selectCompany(id) {
+      setLoading(true,'契約会社の設定を読み込んでいます');
+      try {
+        const data=await api(`/api/admin/companies/${id}`);
+        state.companies.selected=data.item;
+        renderCompanyDetail(data.item);
+        renderCompanyTable();
+      } catch (error) { toast(error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    function renderCompanyDetail(item) {
+      $('companyDetailCard').hidden=false;
+      $('companyDetailTitle').textContent=item.companyName;
+      $('companyDetailSub').textContent=`${item.companyCode}・管理者：${item.adminUser?.userCode||'未設定'}・${item.site?.baseUrl||'URL未設定'}`;
+      $('companyDetailBadge').textContent=companyStatusLabel(item.status);
+      $('companyDetailBadge').className=`badge ${item.status==='active' ? 'ok':'wait'}`;
+      $('companyEditStatus').value=item.status||'active';
+      $('companyEditSetupStatus').value=item.onboarding?.setupStatus||'ready';
+      $('companyEditPlan').value=item.onboarding?.planCode||'standard';
+      $('companyEditNotes').value=item.onboarding?.notes||'';
+      const enabled=(item.featureFlags||[]).filter((flag)=>flag.enabled).map((flag)=>flag.feature_key);
+      $('companyEditFeatures').innerHTML=featureCheckboxHtml('edit',enabled);
+      renderOnboardingSteps('companyDetailSteps',item.onboarding?.setupSteps||{});
+    }
+
+    async function createCompany(event) {
+      event.preventDefault();
+      const payload={
+        companyName:$('companyCreateName').value.trim(),companyCode:$('companyCreateCode').value.trim(),
+        websiteUrl:$('companyCreateUrl').value.trim(),contactEmail:$('companyCreateContactEmail').value.trim(),
+        planCode:$('companyCreatePlan').value,adminDisplayName:$('companyCreateAdminName').value.trim(),
+        adminEmail:$('companyCreateAdminEmail').value.trim(),adminUserCode:$('companyCreateUserCode').value.trim(),
+        initialPassword:$('companyCreatePassword').value,enabledFeatures:selectedFeatures('create'),notes:$('companyCreateNotes').value.trim(),
+      };
+      setLoading(true,'契約会社と管理者を作成しています');
+      try {
+        const data=await api('/api/admin/companies',{method:'POST',body:payload,timeout:90000});
+        showMessage('companyCreateMessage',`作成しました。管理者ユーザーコード：${data.initialLogin?.userCode||payload.adminUserCode}`,'success');
+        $('companyCreatePassword').value='';
+        await loadCompaniesView(true);
+      } catch (error) { showMessage('companyCreateMessage',error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function saveCompanyBasicSettings() {
+      const item=state.companies.selected;if (!item) return;
+      setLoading(true,'契約会社の設定を保存しています');
+      try {
+        const data=await api(`/api/admin/companies/${item.id}`,{method:'PATCH',body:{status:$('companyEditStatus').value,setupStatus:$('companyEditSetupStatus').value,planCode:$('companyEditPlan').value,notes:$('companyEditNotes').value.trim()}});
+        state.companies.selected=data.item;toast('基本設定を保存しました。','success');await loadCompaniesView(true);await selectCompany(item.id);
+      } catch (error) { toast(error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function saveCompanyFeatures() {
+      const item=state.companies.selected;if (!item) return;
+      setLoading(true,'利用機能を保存しています');
+      try { await api(`/api/admin/companies/${item.id}/features`,{method:'PATCH',body:{enabledFeatures:selectedFeatures('edit')}});toast('機能設定を保存しました。','success');await loadCompaniesView(true);await selectCompany(item.id); }
+      catch (error) { toast(error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function resetCompanyPassword() {
+      const item=state.companies.selected;if (!item) return;
+      const password=$('companyResetPassword').value;
+      if (!password) return toast('新しいパスワードを入力してください。','error');
+      if (!confirm(`${item.companyName}の管理者パスワードを再設定しますか？`)) return;
+      setLoading(true,'管理者パスワードを再設定しています');
+      try { const data=await api(`/api/admin/companies/${item.id}/reset-password`,{method:'POST',body:{password}});$('companyResetPassword').value='';toast(`パスワードを再設定しました。ユーザーコード：${data.userCode}`,'success'); }
+      catch (error) { toast(error.message,'error'); }
+      finally { setLoading(false); }
+    }
+
+    function companyStatusLabel(value) { return ({active:'稼働中',suspended:'停止中',archived:'保管済み'})[value]||value||'未設定'; }
+    function setupStatusLabel(value) { return ({draft:'準備前',ready:'初期設定中',active:'運用開始',suspended:'保留'})[value]||value||'未設定'; }
 
     async function loadGoogleReadiness() {
       setLoading(true, 'Google連携設定を確認しています');
@@ -1785,7 +2095,7 @@
     }
 
     function populateBusinessProfileManualForm(snapshot, location) {
-      $('gbpManualBusinessName').value = snapshot?.businessName || location?.locationName || 'DPRO SHOP';
+      $('gbpManualBusinessName').value = snapshot?.businessName || location?.locationName || state.bootstrap?.company?.companyName || '店舗';
       $('gbpManualStatus').value = snapshot?.profileStatus || 'unknown';
       $('gbpManualCategory').value = snapshot?.primaryCategory || location?.primaryCategory || '';
       $('gbpManualWebsite').value = snapshot?.websiteUrl || location?.websiteUrl || 'https://dpro-shop.com/';
@@ -2015,7 +2325,7 @@
       $('conversionMessage').className = `notice ${ga4Ready ? 'success' : 'info'} section-space`;
       $('conversionMessage').textContent = ga4Ready
         ? `過去${data.days || 28}日間を表示しています。GA4最終同期：${ga4.lastSyncAt ? formatJapanDate(ga4.lastSyncAt) : '未同期'}。相談ボタンは即時保存されます。`
-        : 'DPRO SHOPサイトの相談ボタン計測は開始済みです。GA4プロパティを選択して同期すると訪問数も表示されます。';
+        : '管理サイトの相談ボタン計測は開始済みです。GA4プロパティを選択して同期すると訪問数も表示されます。';
       const pages = data.topPages || [];
       $('conversionPageTable').innerHTML = pages.length ? pages.map((row) => `<tr><td class="gsc-table-title">${escapeHtml(row.pageName || row.pageUrl || 'ページ不明')}</td><td>${formatNumber(row.lineClicks || 0)}</td><td>${formatNumber(row.phoneClicks || 0)}</td><td>${formatNumber(row.demoViews || 0)}</td><td>${formatNumber(row.total || 0)}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty-panel">行動データはまだありません。</div></td></tr>';
       $('conversionPageBadge').textContent = `${pages.length}件`;
@@ -2326,6 +2636,7 @@
         ['PageSpeed API', h?.pagespeedPrepared ? '準備済み' : '未設定'],
         ['Googleビジネスプロフィール', h?.businessProfileOAuthPrepared ? 'OAuth準備済み' : '手動管理のみ'],
         ['Google広告API', h?.googleAdsPrepared ? 'Developer Token登録済み' : '手動管理のみ'],
+        ['複数会社基盤', h?.multiTenantPrepared ? `準備済み（${h?.activeCompanyCount || 0}社）` : '未準備'],
         ['最終確認', h?.checkedAt ? formatJapanDate(h.checkedAt) : '未確認'],
       ];
       $('systemTableBody').innerHTML = rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('');
@@ -2339,12 +2650,13 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'maps', 'ads', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'maps', 'ads', 'pagespeed', 'tasks', 'reports', 'integrations', 'system', 'companies'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
         state.currentView = view;
         if (view === 'system') renderSystemTable();
+        if (view === 'companies') loadCompaniesView().catch((error) => toast(error.message, 'error'));
         if (view === 'integrations') loadGoogleReadiness().catch((error) => toast(error.message, 'error'));
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
@@ -2992,7 +3304,7 @@
         search_console: 'Search Console連携', ga4: 'GA4連携', business_profile: 'Googleマップ管理',
         page_audit: 'ページ診断', pagespeed: 'PageSpeedページ診断', keyword_management: 'キーワード管理', conversion_tracking: '問い合わせ計測',
         recommendations: '改善提案', weekly_report: '週次レポート', monthly_report: '月次レポート', weekly_reports: '週次レポート', monthly_reports: '月次レポート',
-        google_ads: 'Google広告分析', multi_location: '複数店舗管理'
+        google_ads: 'Google広告分析', multi_location: '複数店舗管理', company_management: '契約会社管理', business_profile_manual:'Googleマップ手動管理', business_profile_api:'GoogleマップAPI連携'
       };
       return map[key] || key.replaceAll('_', ' ');
     }
