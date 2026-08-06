@@ -264,6 +264,15 @@
     .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
     .modal-actions .primary { width:auto; min-width:150px; }
     .text-link { color:var(--brand); text-decoration:underline; text-underline-offset:3px; word-break:break-all; }
+    .impact-box { min-width:180px; }
+    .impact-line { display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:.78rem; }
+    .impact-line strong { font-size:.9rem; }
+    .impact-sub { margin-top:4px; color:var(--muted); font-size:.7rem; }
+    .impact-pill { display:inline-flex; align-items:center; min-height:24px; padding:2px 7px; border-radius:999px; font-size:.68rem; font-weight:900; }
+    .impact-pill.improved { color:var(--brand); background:var(--brand-soft); }
+    .impact-pill.no_change { color:var(--warn); background:var(--warn-soft); }
+    .impact-pill.declined { color:var(--danger); background:var(--danger-soft); }
+    .impact-pill.inconclusive { color:var(--muted); background:#edf0ef; }
 
     @media (max-width: 1050px) {
       .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -318,7 +327,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-7</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-8</p>
         </div>
       </div>
       <div class="top-actions">
@@ -616,7 +625,11 @@
           </div>
 
           <article class="card section-space">
-            <div class="card-title-row"><h2 class="card-title">優先して確認する項目</h2><span id="pagespeedIssueBadge" class="badge off">0件</span></div>
+            <div class="card-title-row">
+              <h2 class="card-title">優先して確認する項目</h2>
+              <div class="row-actions"><button id="pagespeedCreateTasksButton" class="mini-button" type="button" disabled>上位3件をタスク化</button><span id="pagespeedIssueBadge" class="badge off">0件</span></div>
+            </div>
+            <div id="pagespeedTaskMessage" class="notice info" style="margin:0 0 14px">診断結果から、重複を除いて優先度の高い改善作業を最大3件作成します。</div>
             <div class="table-wrap"><table class="data-table"><thead><tr><th>項目</th><th>分類</th><th>現在</th><th>改善内容</th></tr></thead><tbody id="pagespeedIssueTable"></tbody></table></div>
           </article>
 
@@ -628,7 +641,7 @@
 
         <section id="view-tasks" class="view" hidden>
           <div class="page-head">
-            <div><h1>改善タスク</h1><p>次に行う作業を絞り、完了後の効果測定へつなげます。</p></div>
+            <div><h1>改善タスク</h1><p>診断結果から作業を絞り、変更前後の点数まで比較します。</p></div>
             <div class="page-actions"><button id="addTaskButton" class="secondary" type="button">改善タスクを追加</button></div>
           </div>
           <div id="taskSummary" class="summary-strip"></div>
@@ -641,7 +654,7 @@
               </div>
               <span id="taskCountBadge" class="badge ok">0件</span>
             </div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>改善タスク</th><th>対象</th><th>優先度</th><th>期限</th><th>状態</th><th>操作</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
+            <div class="table-wrap"><table class="data-table" style="min-width:1120px"><thead><tr><th>改善タスク</th><th>対象</th><th>優先度</th><th>期限</th><th>実施前後</th><th>状態</th><th>操作</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
           </article>
         </section>
 
@@ -772,7 +785,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-7-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-8-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -789,6 +802,7 @@
       ga4: { status: null, properties: [], summary: null },
       conversions: { summary: null },
       pagespeed: { summary: null, detail: null },
+      taskImpactSummary: {},
       managementSummary: null,
       loadedViews: new Set(),
       editor: { type: '', id: '' },
@@ -828,6 +842,7 @@
       $('pagespeedStrategySelect').addEventListener('change', () => loadPageSpeedDetail(true));
       $('pagespeedRunButton').addEventListener('click', () => runPageSpeed(false));
       $('pagespeedRunBothButton').addEventListener('click', () => runPageSpeed(true));
+      $('pagespeedCreateTasksButton').addEventListener('click', autoCreatePageSpeedTasks);
       $('activationForm').addEventListener('submit', handleActivation);
       $('loginForm').addEventListener('submit', handleLogin);
       $('logoutTopButton').addEventListener('click', logout);
@@ -1431,7 +1446,33 @@
       const issues = result?.rawSummary?.opportunities || [];
       $('pagespeedIssueBadge').textContent = `${issues.length}件`;
       $('pagespeedIssueBadge').className = `badge ${issues.length ? 'wait' : result ? 'ok' : 'off'}`;
+      $('pagespeedCreateTasksButton').disabled = !result || !issues.length;
+      $('pagespeedTaskMessage').className = `notice ${issues.length ? 'info' : result ? 'success' : 'info'}`;
+      $('pagespeedTaskMessage').textContent = issues.length
+        ? '診断結果から、重複を除いて優先度の高い改善作業を最大3件作成します。'
+        : result ? '大きな改善候補は検出されていません。' : '診断後に改善タスクを自動作成できます。';
       $('pagespeedIssueTable').innerHTML = issues.length ? issues.map((item) => `<tr><td><div class="table-main">${escapeHtml(item.title || item.id)}</div><div class="table-sub">${escapeHtml(item.displayValue || '')}</div></td><td>${escapeHtml((item.categories || []).map(pageSpeedCategoryLabel).join('／') || '技術')}</td><td>${scoreBadge(item.score)}</td><td class="issue-description">${escapeHtml(item.description || '詳細は診断結果を確認してください。')}</td></tr>`).join('') : emptyTableRow(4, result ? '大きな改善候補は検出されませんでした。' : 'この端末の診断結果はまだありません。');
+    }
+
+    async function autoCreatePageSpeedTasks() {
+      const landingPageId = $('pagespeedPageSelect').value;
+      const strategy = $('pagespeedStrategySelect').value || 'mobile';
+      if (!landingPageId || !state.pagespeed.detail?.result) return toast('先に診断結果を表示してください。', 'error');
+      if (!confirm('優先度の高い改善候補を最大3件、改善タスクとして作成しますか？')) return;
+      setLoading(true, '診断結果から改善タスクを作成しています');
+      try {
+        const data = await api('/api/pagespeed/tasks/auto-create', { method:'POST', body:{ landingPageId, strategy, limit:3 }, timeout:60000 });
+        toast(data.message || `${data.createdCount || 0}件の改善タスクを作成しました。`, data.createdCount ? 'success' : 'warn');
+        state.loadedViews.delete('tasks');
+        state.managementSummary = null;
+        const button = document.querySelector('[data-view="tasks"]');
+        if (button) {
+          switchView('tasks', button);
+          await loadManagementView('tasks', true);
+        }
+        await refreshBootstrap();
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
     }
 
     async function runPageSpeed(both) {
@@ -1623,7 +1664,7 @@
 
     function lockedViewMeta(view) {
       const map = {
-                maps: { title: 'Googleマップ', heading: 'SHUKYAKU-8で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
+                maps: { title: 'Googleマップ', heading: 'SHUKYAKU-10で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
                 reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
       };
       return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
@@ -1658,6 +1699,7 @@
             state.loadedViews.has('pages') ? Promise.resolve() : api('/api/pages').then((d) => { state.pages = d.items || []; state.loadedViews.add('pages'); }),
           ]);
           state.tasks = taskData.items || [];
+          state.taskImpactSummary = taskData.impactSummary || {};
         }
         state.managementSummary = (await api('/api/management/summary')).summary || {};
         state.loadedViews.add(view);
@@ -1738,19 +1780,52 @@
       });
       $('taskCountBadge').textContent = `${items.length}件`;
       const sm = state.managementSummary || {};
+      const impact = state.taskImpactSummary || {};
       $('taskSummary').innerHTML = summaryItems([
-        ['登録タスク', sm.taskCount ?? state.tasks.length],['未完了', sm.openTaskCount ?? 0],['完了', sm.completedTaskCount ?? 0],['期限超過', sm.overdueTaskCount ?? 0]
+        ['登録タスク', sm.taskCount ?? state.tasks.length],
+        ['未完了', sm.openTaskCount ?? 0],
+        ['効果測定済み', impact.measuredCount ?? 0],
+        ['改善確認', impact.improvedCount ?? 0]
       ]);
       $('taskTableBody').innerHTML = items.length ? items.map((item) => {
         const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword;
         const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name;
+        const isPageSpeed = item.baseline_metrics?.source === 'pagespeed';
+        const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
+        const measureButton = isPageSpeed && item.status !== 'excluded'
+          ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
         <td>${escapeHtml(item.due_date || '未設定')}</td>
+        <td>${renderTaskImpact(item)}</td>
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
-        <td><div class="row-actions"><button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
-      }).join('') : emptyTableRow(6, '条件に合う改善タスクがありません。');
+        <td><div class="row-actions">${measureButton}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
+      }).join('') : emptyTableRow(7, '条件に合う改善タスクがありません。');
+    }
+
+    function renderTaskImpact(item) {
+      const baseline = item.baseline_metrics || {};
+      const result = item.result_metrics || {};
+      if (baseline.source !== 'pagespeed') return '<div class="impact-box"><span class="table-sub">手動タスク</span></div>';
+      const before = result.before || baseline;
+      const after = result.after || null;
+      const beforeScore = scoreDisplay(before.performanceScore);
+      if (!after) {
+        return `<div class="impact-box"><div class="impact-line"><span>Performance</span><strong>${escapeHtml(beforeScore)}</strong><span class="impact-pill inconclusive">未測定</span></div><div class="impact-sub">${escapeHtml(strategyLabel(baseline.strategy || 'mobile'))}の診断値を保存済み</div></div>`;
+      }
+      const afterScore = scoreDisplay(after.performanceScore);
+      const outcome = result.outcome || 'inconclusive';
+      const delta = result.comparison?.performanceScoreDelta;
+      const lcpBefore = formatMilliseconds(before.largestContentfulPaintMs);
+      const lcpAfter = formatMilliseconds(after.largestContentfulPaintMs);
+      return `<div class="impact-box"><div class="impact-line"><span>Performance</span><strong>${escapeHtml(beforeScore)} → ${escapeHtml(afterScore)}</strong><span class="impact-pill ${escapeHtml(outcome)}">${escapeHtml(outcomeLabel(outcome, delta))}</span></div><div class="impact-sub">LCP ${escapeHtml(lcpBefore)} → ${escapeHtml(lcpAfter)}｜${escapeHtml(formatJapanDate(result.measuredAt))}</div></div>`;
+    }
+
+    function outcomeLabel(outcome, delta) {
+      const number = Number(delta);
+      const suffix = Number.isFinite(number) ? ` ${number > 0 ? '+' : ''}${Math.round(number)}` : '';
+      return ({ improved:'改善', no_change:'変化小', declined:'低下', inconclusive:'判定保留' })[outcome] + suffix;
     }
 
     function summaryItems(items) { return items.map(([label,value]) => `<div class="summary-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join(''); }
@@ -1841,6 +1916,26 @@
       finally { setLoading(false); }
     }
 
+    async function measureTaskImpact(id) {
+      const item = state.tasks.find((task) => task.id === id);
+      if (!item) return;
+      const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name || '対象ページ';
+      const strategy = strategyLabel(item.baseline_metrics?.strategy || 'mobile');
+      if (!confirm(`「${item.title}」の効果を、${page}の${strategy}診断で測定しますか？\n1分程度かかる場合があります。`)) return;
+      setLoading(true, 'PageSpeedを再診断し、変更前後を比較しています');
+      try {
+        const data = await api(`/api/tasks/${encodeURIComponent(id)}/measure`, { method:'POST', body:{}, timeout:180000 });
+        const delta = data.comparison?.performanceScoreDelta;
+        const label = outcomeLabel(data.outcome || 'inconclusive', delta);
+        toast(`効果測定が完了しました：${label}`, data.outcome === 'declined' ? 'warn' : 'success');
+        state.pagespeed.summary = null;
+        state.pagespeed.detail = null;
+        state.loadedViews.delete('tasks');
+        await Promise.allSettled([loadManagementView('tasks', true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
     window.SHUKYAKU = {
       edit(type,id) {
         const collection = type === 'keyword' ? state.keywords : type === 'page' ? state.pages : state.tasks;
@@ -1848,6 +1943,7 @@
         if (item) openEditor(type,item);
       },
       remove(type,id) { deleteManagementItem(type,id); },
+      measureTask(id) { measureTaskImpact(id); },
       auditPage(id) {
         const button = document.querySelector('[data-view="pagespeed"]');
         if (!button) return;
