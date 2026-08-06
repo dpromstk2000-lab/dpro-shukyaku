@@ -304,7 +304,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-5</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-6</p>
         </div>
       </div>
       <div class="top-actions">
@@ -326,7 +326,7 @@
           <div class="hero-points">
             <div class="hero-point"><span class="check">✓</span><span>初期キーワード24件を登録済み</span></div>
             <div class="hero-point"><span class="check">✓</span><span>会社分離・RLS・監査ログを最初から実装</span></div>
-            <div class="hero-point"><span class="check">✓</span><span>Search Console・GA4連携を次STEPで追加可能</span></div>
+            <div class="hero-point"><span class="check">✓</span><span>Search Console・GA4・相談ボタン計測に対応</span></div>
           </div>
         </div>
         <div class="health-card">
@@ -422,7 +422,7 @@
         <button class="nav-button" type="button" data-view="keywords"><span class="nav-icon">語</span>キーワード</button>
         <button class="nav-button" type="button" data-view="search-console"><span class="nav-icon">検</span>検索データ</button>
         <button class="nav-button" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
-        <button class="nav-button locked" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
+        <button class="nav-button" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
         <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
         <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
@@ -463,8 +463,8 @@
             <article class="card">
               <div class="card-title-row"><h2 class="card-title">次に行う作業</h2><span class="badge wait">準備段階</span></div>
               <div class="steps">
-                <div class="step"><div class="step-title">Search Consoleを接続</div><div class="step-sub">実際に表示された検索語・クリック数・平均掲載順位を取り込みます。</div></div>
-                <div class="step"><div class="step-title">GA4と相談ボタンを計測</div><div class="step-sub">検索からLINE相談・問い合わせまでの流れをつなぎます。</div></div>
+                <div class="step"><div class="step-title">Search Consoleの検索データを改善へ使う</div><div class="step-sub">表示された検索語とページを確認し、優先ページを決めます。</div></div>
+                <div class="step"><div class="step-title">GA4プロパティを選択して同期</div><div class="step-sub">訪問からLINE相談・デモ閲覧までの流れをつなぎます。</div></div>
                 <div class="step"><div class="step-title">地域・サービスページを改善</div><div class="step-sub">取得した数値をもとに毎週3件以内の改善作業へ絞ります。</div></div>
               </div>
             </article>
@@ -498,6 +498,40 @@
               <span id="keywordCountBadge" class="badge ok">0件</span>
             </div>
             <div class="table-wrap"><table class="data-table"><thead><tr><th>キーワード</th><th>地域・サービス</th><th>検索目的</th><th>優先度</th><th>状態</th><th>操作</th></tr></thead><tbody id="keywordTableBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="view-conversions" class="view" hidden>
+          <div class="page-head">
+            <div><h1>アクセス・問い合わせ</h1><p>サイト訪問からLINE相談・電話・デモ閲覧までを確認します。</p></div>
+            <div class="page-actions"><button id="conversionRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+          <div class="grid-4">
+            <article class="card"><div class="metric-label">利用者</div><div id="conversionUsers" class="metric-value">―</div><div class="metric-note">GA4の利用者数</div></article>
+            <article class="card"><div class="metric-label">セッション</div><div id="conversionSessions" class="metric-value">―</div><div class="metric-note">サイト訪問回数</div></article>
+            <article class="card"><div class="metric-label">ページ閲覧</div><div id="conversionPageViews" class="metric-value">―</div><div class="metric-note">GA4のページ表示</div></article>
+            <article class="card"><div class="metric-label">LINE相談クリック</div><div id="conversionLineClicks" class="metric-value">―</div><div class="metric-note">DPRO即時計測</div></article>
+          </div>
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">電話クリック</div><div id="conversionPhoneClicks" class="metric-value">―</div><div class="metric-note">電話リンクの利用</div></article>
+            <article class="card"><div class="metric-label">問い合わせ送信</div><div id="conversionInquiries" class="metric-value">―</div><div class="metric-note">フォーム導入時に計測</div></article>
+            <article class="card"><div class="metric-label">デモ閲覧</div><div id="conversionDemoViews" class="metric-value">―</div><div class="metric-note">DPRO製品サイトへの移動</div></article>
+            <article class="card"><div class="metric-label">行動率</div><div id="conversionRate" class="metric-value">―</div><div class="metric-note">計測行動 ÷ セッション</div></article>
+          </div>
+          <div id="conversionMessage" class="notice info section-space">GA4を接続し、DPRO SHOPサイトの計測を開始します。</div>
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">行動が発生したページ</h2><span id="conversionPageBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>ページ</th><th>LINE</th><th>電話</th><th>デモ</th><th>合計</th></tr></thead><tbody id="conversionPageTable"></tbody></table></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">流入元</h2><span id="conversionSourceBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>流入元 / メディア</th><th>行動数</th></tr></thead><tbody id="conversionSourceTable"></tbody></table></div>
+            </article>
+          </div>
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">最近の行動</h2><span id="conversionRecentBadge" class="badge off">0件</span></div>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>日時</th><th>行動</th><th>ページ</th><th>流入元</th></tr></thead><tbody id="conversionRecentTable"></tbody></table></div>
           </article>
         </section>
 
@@ -596,6 +630,35 @@
             </div>
             <div class="field-help" style="margin-top:10px">初回は約28日分を取得します。日次同期は3日前の確定データを取得します。</div>
           </article>
+          <div class="page-head section-space" style="margin-bottom:14px"><div><h2 style="margin:0;font-size:1.35rem">Google Analytics 4</h2><p>サイト訪問・ページ閲覧・相談ボタンのデータを取得します。</p></div></div>
+          <div class="gsc-control-grid">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">GA4接続状態</h2><span id="ga4ConnectionBadge" class="badge wait">未接続</span></div>
+              <p id="ga4ConnectionText" style="margin:0 0 16px;color:var(--muted)">Analyticsの読み取り権限を追加してGoogleへ再接続します。</p>
+              <div class="gsc-action-row">
+                <button id="ga4ReconnectButton" class="secondary" type="button">Googleへ再接続</button>
+                <button id="ga4DisconnectButton" class="danger-button" type="button" hidden>GA4設定を解除</button>
+              </div>
+              <div id="ga4ConnectionMessage"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">取得するGA4プロパティ</h2><span id="ga4PropertyBadge" class="badge off">未選択</span></div>
+              <div class="gsc-property">
+                <select id="ga4PropertySelect" disabled><option value="">再接続後に選択できます</option></select>
+                <button id="ga4PropertySaveButton" class="secondary" type="button" disabled>このプロパティを使用</button>
+              </div>
+            </article>
+          </div>
+          <article class="card section-space">
+            <div class="card-title-row"><h2 class="card-title">GA4データを同期</h2><span id="ga4SyncBadge" class="badge off">未同期</span></div>
+            <div class="sync-form">
+              <div class="field"><label for="ga4DateFrom">開始日</label><input id="ga4DateFrom" class="input" type="date"></div>
+              <div class="field"><label for="ga4DateTo">終了日</label><input id="ga4DateTo" class="input" type="date"></div>
+              <button id="ga4SyncButton" class="secondary" type="button" disabled>同期を実行</button>
+            </div>
+            <div class="field-help" style="margin-top:10px">初回は約28日分を取得します。日次同期は2日前のデータを取得します。</div>
+          </article>
+
           <article class="card section-space">
             <div class="card-title-row"><h2 class="card-title">接続サービス</h2><span id="oauthBadge" class="badge wait">OAuth未設定</span></div>
             <div id="integrationList" class="list"></div>
@@ -637,7 +700,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-5-OWNER-20260805';
+    const APP_VERSION = 'SHUKYAKU-6-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -651,6 +714,8 @@
       pages: [],
       tasks: [],
       searchConsole: { status: null, properties: [], summary: null },
+      ga4: { status: null, properties: [], summary: null },
+      conversions: { summary: null },
       managementSummary: null,
       loadedViews: new Set(),
       editor: { type: '', id: '' },
@@ -661,6 +726,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       bindEvents();
       setDefaultGscDates();
+      setDefaultGa4Dates();
       restoreSession();
       refreshHealth().then(() => {
         if (state.token) tryResumeSession();
@@ -679,6 +745,11 @@
       $('gscPropertySaveButton').addEventListener('click', saveSearchConsoleProperty);
       $('gscSyncButton').addEventListener('click', syncSearchConsole);
       $('gscRefreshButton').addEventListener('click', () => loadSearchConsoleView(true));
+      $('ga4ReconnectButton').addEventListener('click', startGoogleConnection);
+      $('ga4DisconnectButton').addEventListener('click', disconnectGa4);
+      $('ga4PropertySaveButton').addEventListener('click', saveGa4Property);
+      $('ga4SyncButton').addEventListener('click', syncGa4);
+      $('conversionRefreshButton').addEventListener('click', () => loadConversionView(true));
       $('activationForm').addEventListener('submit', handleActivation);
       $('loginForm').addEventListener('submit', handleLogin);
       $('logoutTopButton').addEventListener('click', logout);
@@ -908,11 +979,13 @@
     async function loadGoogleReadiness() {
       setLoading(true, 'Google連携設定を確認しています');
       try {
-        const [readiness, status] = await Promise.all([
+        const [readiness, status, ga4Status] = await Promise.all([
           api('/api/oauth/google/readiness'),
           api('/api/search-console/status'),
+          api('/api/ga4/status'),
         ]);
         state.searchConsole.status = status;
+        state.ga4.status = ga4Status;
         $('oauthBadge').textContent = readiness.configured ? 'OAuth準備済み' : 'OAuth未設定';
         $('oauthBadge').className = `badge ${readiness.configured ? 'ok' : 'wait'}`;
         const missing = Object.entries(readiness.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
@@ -921,9 +994,11 @@
           ? `Google OAuth設定は準備済みです。リダイレクトURI：${readiness.redirectUri || '未確認'}`
           : `未登録：${missing.join('、') || 'Google OAuth設定'}`;
         renderSearchConsoleConnection(status, readiness.configured);
-        if (status.integration?.connectionStatus === 'connected' || status.integration?.connectionStatus === 'error') {
-          await loadSearchConsoleProperties();
-        }
+        renderGa4Connection(ga4Status, readiness.configured);
+        const jobs = [];
+        if (status.integration?.connectionStatus === 'connected' || status.integration?.connectionStatus === 'error') jobs.push(loadSearchConsoleProperties());
+        if (ga4Status.analyticsScopeGranted) jobs.push(loadGa4Properties());
+        await Promise.allSettled(jobs);
       } catch (error) {
         toast(error.message, 'error');
       } finally {
@@ -1036,6 +1111,140 @@
       finally { setLoading(false); }
     }
 
+    function renderGa4Connection(status, configured = state.health?.googleOauthPrepared) {
+      const connection = status?.integration?.connectionStatus || 'not_connected';
+      const scopeOk = Boolean(status?.analyticsScopeGranted);
+      const meta = connectionMeta(connection);
+      $('ga4ConnectionBadge').textContent = scopeOk ? meta.label : '権限追加が必要';
+      $('ga4ConnectionBadge').className = `badge ${scopeOk && connection === 'connected' ? 'ok' : 'wait'}`;
+      $('ga4ReconnectButton').disabled = !configured;
+      $('ga4DisconnectButton').hidden = !status?.selectedProperty;
+      $('ga4ConnectionText').textContent = !configured
+        ? 'Google OAuth設定が未完了です。'
+        : !scopeOk
+          ? 'Google Analyticsの読み取り権限を追加し、Googleへ再接続してください。'
+          : connection === 'connected'
+            ? `接続済み${status.selectedProperty ? `・${status.selectedProperty}` : '・GA4プロパティを選択してください'}`
+            : connection === 'error'
+              ? `接続エラー：${status.integration?.lastErrorMessage || '設定を確認してください。'}`
+              : 'GA4プロパティを選択してください。';
+      $('ga4PropertyBadge').textContent = status?.selectedProperty ? '選択済み' : '未選択';
+      $('ga4PropertyBadge').className = `badge ${status?.selectedProperty ? 'ok' : 'off'}`;
+      $('ga4SyncButton').disabled = !(scopeOk && connection === 'connected' && status?.selectedProperty);
+      $('ga4SyncBadge').textContent = status?.integration?.lastSyncAt ? formatJapanDate(status.integration.lastSyncAt) : '未同期';
+      $('ga4SyncBadge').className = `badge ${status?.integration?.lastSyncAt ? 'ok' : 'off'}`;
+    }
+
+    async function loadGa4Properties() {
+      try {
+        const data = await api('/api/ga4/properties');
+        state.ga4.properties = data.properties || [];
+        const select = $('ga4PropertySelect');
+        select.innerHTML = '<option value="">GA4プロパティを選択</option>' + state.ga4.properties.map((item) =>
+          `<option value="${escapeHtml(item.property)}"${item.selected ? ' selected' : ''}>${escapeHtml(item.displayName)}（${escapeHtml(item.propertyId)}）</option>`
+        ).join('');
+        select.disabled = !state.ga4.properties.length;
+        $('ga4PropertySaveButton').disabled = !state.ga4.properties.length;
+        if (data.selectedProperty) select.value = data.selectedProperty;
+      } catch (error) {
+        $('ga4PropertySelect').innerHTML = '<option value="">GA4プロパティを取得できません</option>';
+        $('ga4PropertySelect').disabled = true;
+        $('ga4PropertySaveButton').disabled = true;
+        showMessage('ga4ConnectionMessage', error.message, 'error');
+      }
+    }
+
+    async function saveGa4Property() {
+      const property = $('ga4PropertySelect').value;
+      if (!property) return toast('取得するGA4プロパティを選択してください。', 'error');
+      setLoading(true, 'GA4プロパティを保存しています');
+      try {
+        await api('/api/ga4/property', { method:'POST', body:{ property } });
+        toast('GA4プロパティを保存しました。', 'success');
+        state.ga4.summary = null;
+        state.conversions.summary = null;
+        await Promise.all([loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function syncGa4() {
+      const dateFrom = $('ga4DateFrom').value;
+      const dateTo = $('ga4DateTo').value;
+      if (!dateFrom || !dateTo) return toast('同期期間を入力してください。', 'error');
+      setLoading(true, 'GA4データを取得しています');
+      try {
+        const data = await api('/api/ga4/sync', { method:'POST', body:{ dateFrom, dateTo }, timeout:120000 });
+        toast(`${data.rowCount || 0}件のGA4データを同期しました。`, 'success');
+        state.ga4.summary = null;
+        state.conversions.summary = null;
+        await Promise.all([loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function disconnectGa4() {
+      if (!confirm('GA4のプロパティ設定を解除しますか？保存済みデータとGoogle接続は残ります。')) return;
+      setLoading(true, 'GA4設定を解除しています');
+      try {
+        await api('/api/ga4/disconnect', { method:'DELETE' });
+        state.ga4 = { status:null, properties:[], summary:null };
+        state.conversions.summary = null;
+        toast('GA4設定を解除しました。', 'success');
+        await Promise.all([loadGoogleReadiness(), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function loadConversionView(force = false) {
+      if (!state.token) return;
+      if (!force && state.conversions.summary) return renderConversionSummary(state.conversions.summary);
+      setLoading(true, 'アクセス・問い合わせデータを読み込んでいます');
+      try {
+        const data = await api('/api/conversions/summary?days=28');
+        state.conversions.summary = data;
+        renderConversionSummary(data);
+      } catch (error) {
+        $('conversionMessage').className = 'notice error section-space';
+        $('conversionMessage').textContent = error.message;
+      } finally { setLoading(false); }
+    }
+
+    function renderConversionSummary(data) {
+      const totals = data.totals || {};
+      const ga4 = data.ga4 || {};
+      $('conversionUsers').textContent = formatNumber(ga4.users || 0);
+      $('conversionSessions').textContent = formatNumber(ga4.sessions || 0);
+      $('conversionPageViews').textContent = formatNumber(ga4.pageViews || 0);
+      $('conversionLineClicks').textContent = formatNumber(totals.lineConsultClicks || 0);
+      $('conversionPhoneClicks').textContent = formatNumber(totals.phoneClicks || 0);
+      $('conversionInquiries').textContent = formatNumber(totals.inquirySubmissions || 0);
+      $('conversionDemoViews').textContent = formatNumber(totals.demoViews || 0);
+      $('conversionRate').textContent = formatPercent(data.conversionRate || 0);
+      const ga4Ready = Boolean(ga4.selectedProperty);
+      $('conversionMessage').className = `notice ${ga4Ready ? 'success' : 'info'} section-space`;
+      $('conversionMessage').textContent = ga4Ready
+        ? `過去${data.days || 28}日間を表示しています。GA4最終同期：${ga4.lastSyncAt ? formatJapanDate(ga4.lastSyncAt) : '未同期'}。相談ボタンは即時保存されます。`
+        : 'DPRO SHOPサイトの相談ボタン計測は開始済みです。GA4プロパティを選択して同期すると訪問数も表示されます。';
+      const pages = data.topPages || [];
+      $('conversionPageTable').innerHTML = pages.length ? pages.map((row) => `<tr><td class="gsc-table-title">${escapeHtml(row.pageName || row.pageUrl || 'ページ不明')}</td><td>${formatNumber(row.lineClicks || 0)}</td><td>${formatNumber(row.phoneClicks || 0)}</td><td>${formatNumber(row.demoViews || 0)}</td><td>${formatNumber(row.total || 0)}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty-panel">行動データはまだありません。</div></td></tr>';
+      $('conversionPageBadge').textContent = `${pages.length}件`;
+      $('conversionPageBadge').className = `badge ${pages.length ? 'ok' : 'off'}`;
+      const sources = data.topSources || [];
+      $('conversionSourceTable').innerHTML = sources.length ? sources.map((row) => `<tr><td>${escapeHtml(row.source || '不明')}</td><td>${formatNumber(row.count || 0)}</td></tr>`).join('') : '<tr><td colspan="2"><div class="empty-panel">流入元データはまだありません。</div></td></tr>';
+      $('conversionSourceBadge').textContent = `${sources.length}件`;
+      $('conversionSourceBadge').className = `badge ${sources.length ? 'ok' : 'off'}`;
+      const recent = data.recentEvents || [];
+      $('conversionRecentTable').innerHTML = recent.length ? recent.map((row) => `<tr><td>${escapeHtml(formatJapanDate(row.occurredAt))}</td><td><span class="badge ok">${escapeHtml(conversionEventLabel(row.eventName))}</span></td><td class="gsc-table-title">${escapeHtml(row.pageUrl || 'ページ不明')}</td><td>${escapeHtml(`${row.source || '(direct)'} / ${row.medium || '(none)'}`)}</td></tr>`).join('') : '<tr><td colspan="4"><div class="empty-panel">最近の行動はありません。</div></td></tr>';
+      $('conversionRecentBadge').textContent = `${recent.length}件`;
+      $('conversionRecentBadge').className = `badge ${recent.length ? 'ok' : 'off'}`;
+    }
+
+    function conversionEventLabel(name) {
+      const map = { line_consult_click:'LINE相談', phone_click:'電話', inquiry_submit:'問い合わせ', demo_view:'デモ閲覧' };
+      return map[name] || name || '行動';
+    }
+
     async function loadSearchConsoleView(force = false) {
       if (!state.token) return;
       if (!force && state.searchConsole.summary) return renderSearchConsoleSummary(state.searchConsole.summary);
@@ -1133,7 +1342,7 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'pages', 'tasks', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'tasks', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
@@ -1141,6 +1350,7 @@
         if (view === 'system') renderSystemTable();
         if (view === 'integrations') loadGoogleReadiness().catch((error) => toast(error.message, 'error'));
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
+        if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
         return;
       }
@@ -1155,8 +1365,7 @@
 
     function lockedViewMeta(view) {
       const map = {
-                conversions: { title: 'アクセス・問い合わせ', heading: 'SHUKYAKU-6で有効化', description: 'GA4、LINE相談クリック、フォーム送信、商談をつなぎます。' },
-        maps: { title: 'Googleマップ', heading: 'SHUKYAKU-8で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
+                maps: { title: 'Googleマップ', heading: 'SHUKYAKU-8で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
                 reports: { title: 'レポート', heading: 'SHUKYAKU-9で有効化', description: '週次・月次の成果と、次に行う改善作業をまとめます。' },
       };
       return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
@@ -1409,7 +1618,7 @@
       } finally {
         clearSession();
         state.bootstrap = null;
-        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.loadedViews.clear();
+        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.ga4 = { status:null, properties:[], summary:null }; state.conversions = { summary:null }; state.loadedViews.clear();
         showPreauth();
         setLoading(false);
         toast('ログアウトしました。', 'success');
@@ -1579,6 +1788,13 @@
       const start = new Date(); start.setDate(start.getDate() - 30);
       $('gscDateFrom').value = start.toISOString().slice(0,10);
       $('gscDateTo').value = end.toISOString().slice(0,10);
+    }
+
+    function setDefaultGa4Dates() {
+      const end = new Date(); end.setDate(end.getDate() - 2);
+      const start = new Date(); start.setDate(start.getDate() - 30);
+      $('ga4DateFrom').value = start.toISOString().slice(0,10);
+      $('ga4DateTo').value = end.toISOString().slice(0,10);
     }
 
     function updateJapanTime() {
