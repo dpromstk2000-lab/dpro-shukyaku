@@ -190,6 +190,19 @@
     .score-good { color: var(--brand-2); }
     .score-warn { color: var(--warn); }
     .score-bad { color: var(--danger); }
+    .gbp-connect-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .gbp-controls { display:grid; grid-template-columns:minmax(180px,1fr) minmax(180px,1fr); gap:12px; align-items:end; }
+    .gbp-controls button { grid-column:1 / -1; width:100%; }
+    .gbp-controls label { display:grid; gap:6px; color:var(--muted); font-size:.78rem; font-weight:800; }
+    .gbp-controls select { min-height:48px; padding:10px 12px; border:1px solid #bdcec6; border-radius:11px; background:#fff; color:var(--ink); }
+    .gbp-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .gbp-detail { padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-soft); }
+    .gbp-detail span { display:block; color:var(--muted); font-size:.74rem; }
+    .gbp-detail strong { display:block; margin-top:3px; word-break:break-word; }
+    .manual-profile-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .manual-profile-grid .field { margin:0; }
+    .star-text { color:#9a6500; letter-spacing:.05em; white-space:nowrap; }
+    .profile-task-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .diagnostic-controls { display:grid; grid-template-columns:minmax(240px,1fr) 190px auto auto; gap:12px; align-items:end; }
     .diagnostic-controls label { display:grid; gap:6px; color:var(--muted); font-size:.78rem; font-weight:800; }
     .diagnostic-controls select { min-height:48px; padding:10px 12px; border:1px solid #bdcec6; border-radius:11px; background:#fff; color:var(--ink); }
@@ -359,7 +372,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-9</p>
+          <p class="brand-sub">DPRO SHOP 内部実証版｜SHUKYAKU-10</p>
         </div>
       </div>
       <div class="top-actions">
@@ -479,7 +492,7 @@
         <button class="nav-button" type="button" data-view="pages"><span class="nav-icon">頁</span>ページ管理</button>
         <button class="nav-button" type="button" data-view="conversions"><span class="nav-icon">問</span>アクセス・問い合わせ</button>
         <div class="nav-section">改善運用</div>
-        <button class="nav-button locked" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
+        <button class="nav-button" type="button" data-view="maps"><span class="nav-icon">地</span>Googleマップ</button>
         <button class="nav-button" type="button" data-view="pagespeed"><span class="nav-icon">速</span>ページ診断</button>
         <button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">改</span>改善タスク</button>
         <button class="nav-button" type="button" data-view="reports"><span class="nav-icon">報</span>レポート</button>
@@ -608,6 +621,94 @@
             </div>
             <div class="table-wrap"><table class="data-table"><thead><tr><th>ページ</th><th>種別</th><th>公開状態</th><th>Google登録</th><th>更新日</th><th>操作</th></tr></thead><tbody id="pageTableBody"></tbody></table></div>
           </article>
+        </section>
+
+
+        <section id="view-maps" class="view" hidden>
+          <div class="page-head">
+            <div><h1>Googleマップ集客</h1><p>Googleビジネスプロフィールの基本情報・口コミ・写真・投稿・反応を管理します。</p></div>
+            <div class="page-actions"><button id="gbpRefreshButton" class="secondary" type="button">データを更新</button></div>
+          </div>
+
+          <div id="gbpAccessMessage" class="notice info">Googleビジネスプロフィールの利用状態を確認しています。</div>
+
+          <div class="gbp-connect-grid section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">Google接続状態</h2><span id="gbpConnectionBadge" class="badge wait">確認中</span></div>
+              <p id="gbpConnectionText" style="margin:0 0 16px;color:var(--muted)">API承認前は手動管理を利用できます。</p>
+              <div class="row-actions">
+                <button id="gbpReconnectButton" class="secondary" type="button">Googleへ再接続</button>
+                <button id="gbpProbeButton" class="secondary" type="button">API承認を再確認</button>
+                <button id="gbpSyncButton" class="secondary" type="button" disabled>Googleから同期</button>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">取得するプロフィール</h2><span id="gbpLocationBadge" class="badge off">未選択</span></div>
+              <div class="gbp-controls">
+                <label>アカウント<select id="gbpAccountSelect" disabled><option value="">API承認後に取得できます</option></select></label>
+                <label>拠点<select id="gbpLocationSelect" disabled><option value="">アカウントを選択</option></select></label>
+                <button id="gbpLocationSaveButton" class="secondary" type="button" disabled>この拠点を使用</button>
+              </div>
+            </article>
+          </div>
+
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">プロフィール状態</div><div id="gbpProfileStatus" class="metric-value" style="font-size:1.45rem">―</div><div class="metric-note">確認済み・未確認など</div></article>
+            <article class="card"><div class="metric-label">口コミ</div><div id="gbpReviews" class="metric-value">―</div><div id="gbpRatingNote" class="metric-note">平均評価</div></article>
+            <article class="card"><div class="metric-label">未返信口コミ</div><div id="gbpUnanswered" class="metric-value">―</div><div class="metric-note">優先して返信する件数</div></article>
+            <article class="card"><div class="metric-label">写真・投稿</div><div id="gbpContentCount" class="metric-value">―</div><div class="metric-note">写真数 / 投稿数</div></article>
+          </div>
+
+          <div class="grid-4 section-space">
+            <article class="card"><div class="metric-label">Google検索表示</div><div id="gbpSearchViews" class="metric-value">―</div><div class="metric-note">過去28日・PC＋スマホ</div></article>
+            <article class="card"><div class="metric-label">Googleマップ表示</div><div id="gbpMapViews" class="metric-value">―</div><div class="metric-note">過去28日・PC＋スマホ</div></article>
+            <article class="card"><div class="metric-label">サイト・電話</div><div id="gbpActions" class="metric-value">―</div><div class="metric-note">ウェブクリック / 電話</div></article>
+            <article class="card"><div class="metric-label">ルート検索</div><div id="gbpDirections" class="metric-value">―</div><div class="metric-note">店舗への経路検索</div></article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">登録情報</h2><span id="gbpSnapshotBadge" class="badge off">未記録</span></div>
+              <div id="gbpDetails" class="gbp-detail-grid"></div>
+              <div id="gbpMapLinks" class="row-actions section-space"></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">手動記録</h2><span class="badge ok">API承認前も利用可</span></div>
+              <form id="gbpManualForm">
+                <div class="manual-profile-grid">
+                  <div class="field"><label for="gbpManualBusinessName">ビジネス名</label><input id="gbpManualBusinessName" class="input" required></div>
+                  <div class="field"><label for="gbpManualStatus">状態</label><select id="gbpManualStatus" class="input"><option value="unknown">未確認</option><option value="verified">確認済み</option><option value="unverified">未確認</option><option value="suspended">停止</option><option value="disabled">無効</option></select></div>
+                  <div class="field"><label for="gbpManualCategory">メインカテゴリ</label><input id="gbpManualCategory" class="input"></div>
+                  <div class="field"><label for="gbpManualWebsite">ウェブサイト</label><input id="gbpManualWebsite" class="input" type="url" placeholder="https://dpro-shop.com/"></div>
+                  <div class="field"><label for="gbpManualPhone">電話番号</label><input id="gbpManualPhone" class="input"></div>
+                  <div class="field"><label for="gbpManualReviewCount">口コミ数</label><input id="gbpManualReviewCount" class="input" type="number" min="0" value="0"></div>
+                  <div class="field"><label for="gbpManualRating">平均評価</label><input id="gbpManualRating" class="input" type="number" min="0" max="5" step="0.1"></div>
+                  <div class="field"><label for="gbpManualUnanswered">未返信口コミ</label><input id="gbpManualUnanswered" class="input" type="number" min="0" value="0"></div>
+                  <div class="field"><label for="gbpManualPhotoCount">写真数</label><input id="gbpManualPhotoCount" class="input" type="number" min="0" value="0"></div>
+                  <div class="field"><label for="gbpManualPostCount">投稿数</label><input id="gbpManualPostCount" class="input" type="number" min="0" value="0"></div>
+                  <div class="field" style="grid-column:span 2"><label for="gbpManualHours">営業時間メモ</label><input id="gbpManualHours" class="input" placeholder="平日9:00〜18:00、土日休み"></div>
+                </div>
+                <button class="secondary section-space" type="submit">手動記録を保存</button>
+              </form>
+            </article>
+          </div>
+
+          <div class="grid-2 section-space">
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">最近の口コミ</h2><span id="gbpReviewBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>評価</th><th>口コミ</th><th>返信</th><th>投稿日</th></tr></thead><tbody id="gbpReviewTable"></tbody></table></div>
+            </article>
+            <article class="card">
+              <div class="card-title-row"><h2 class="card-title">Googleマップ改善タスク</h2><span id="gbpTaskBadge" class="badge off">0件</span></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>タスク</th><th>優先度</th><th>期限</th><th>状態</th><th>操作</th></tr></thead><tbody id="gbpTaskTable"></tbody></table></div>
+              <form id="gbpTaskForm" class="profile-task-row section-space">
+                <input id="gbpTaskTitle" class="compact-input" placeholder="改善タスクを追加" required>
+                <select id="gbpTaskType" class="compact-select"><option value="basic_info">基本情報</option><option value="hours">営業時間</option><option value="photo">写真</option><option value="post">投稿</option><option value="review_reply">口コミ返信</option><option value="verification">確認</option><option value="other">その他</option></select>
+                <select id="gbpTaskPriority" class="compact-select"><option value="1">優先度1</option><option value="2">優先度2</option><option value="3" selected>優先度3</option></select>
+                <button class="mini-button" type="submit">追加</button>
+              </form>
+            </article>
+          </div>
         </section>
 
         <section id="view-pagespeed" class="view" hidden>
@@ -875,7 +976,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-9-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-10-OWNER-20260806';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -891,6 +992,7 @@
       searchConsole: { status: null, properties: [], summary: null },
       ga4: { status: null, properties: [], summary: null },
       conversions: { summary: null },
+      businessProfile: { status: null, accounts: [], locations: [], summary: null },
       pagespeed: { summary: null, detail: null },
       reports: { items: [], current: null },
       taskImpactSummary: {},
@@ -929,6 +1031,15 @@
       $('ga4PropertySaveButton').addEventListener('click', saveGa4Property);
       $('ga4SyncButton').addEventListener('click', syncGa4);
       $('conversionRefreshButton').addEventListener('click', () => loadConversionView(true));
+      $('gbpRefreshButton').addEventListener('click', () => loadBusinessProfileView(true));
+      $('gbpReconnectButton').addEventListener('click', startGoogleConnection);
+      $('gbpProbeButton').addEventListener('click', loadBusinessProfileAccounts);
+      $('gbpSyncButton').addEventListener('click', syncBusinessProfile);
+      $('gbpAccountSelect').addEventListener('change', loadBusinessProfileLocations);
+      $('gbpLocationSaveButton').addEventListener('click', saveBusinessProfileLocation);
+      $('gbpManualForm').addEventListener('submit', saveManualBusinessProfile);
+      $('gbpTaskForm').addEventListener('submit', createBusinessProfileTask);
+      $('gbpTaskTable').addEventListener('click', handleBusinessProfileTaskClick);
       $('pagespeedRefreshButton').addEventListener('click', () => loadPageSpeedView(true));
       $('pagespeedPageSelect').addEventListener('change', () => loadPageSpeedDetail(true));
       $('pagespeedStrategySelect').addEventListener('change', () => loadPageSpeedDetail(true));
@@ -1168,13 +1279,15 @@
     async function loadGoogleReadiness() {
       setLoading(true, 'Google連携設定を確認しています');
       try {
-        const [readiness, status, ga4Status] = await Promise.all([
+        const [readiness, status, ga4Status, gbpStatus] = await Promise.all([
           api('/api/oauth/google/readiness'),
           api('/api/search-console/status'),
           api('/api/ga4/status'),
+          api('/api/business-profile/status'),
         ]);
         state.searchConsole.status = status;
         state.ga4.status = ga4Status;
+        state.businessProfile.status = gbpStatus;
         $('oauthBadge').textContent = readiness.configured ? 'OAuth準備済み' : 'OAuth未設定';
         $('oauthBadge').className = `badge ${readiness.configured ? 'ok' : 'wait'}`;
         const missing = Object.entries(readiness.requirements || {}).filter(([, value]) => !value).map(([key]) => key);
@@ -1184,9 +1297,11 @@
           : `未登録：${missing.join('、') || 'Google OAuth設定'}`;
         renderSearchConsoleConnection(status, readiness.configured);
         renderGa4Connection(ga4Status, readiness.configured);
+        renderBusinessProfileConnection(gbpStatus);
         const jobs = [];
         if (status.integration?.connectionStatus === 'connected' || status.integration?.connectionStatus === 'error') jobs.push(loadSearchConsoleProperties());
         if (ga4Status.analyticsScopeGranted) jobs.push(loadGa4Properties());
+        if (gbpStatus.scopeGranted && gbpStatus.apiAccess === 'approved') jobs.push(loadBusinessProfileAccounts(true));
         await Promise.allSettled(jobs);
       } catch (error) {
         toast(error.message, 'error');
@@ -1385,6 +1500,209 @@
       finally { setLoading(false); }
     }
 
+
+    async function loadBusinessProfileView(force = false) {
+      if (!state.token) return;
+      if (!force && state.businessProfile.summary) return renderBusinessProfileSummary(state.businessProfile.summary);
+      setLoading(true, 'Googleマップ情報を読み込んでいます');
+      try {
+        const [status, summary] = await Promise.all([api('/api/business-profile/status'), api('/api/business-profile/summary')]);
+        state.businessProfile.status = status; state.businessProfile.summary = summary;
+        renderBusinessProfileConnection(status); renderBusinessProfileSummary(summary);
+        if (status.scopeGranted && status.apiAccess === 'approved') await loadBusinessProfileAccounts(true, true);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    function renderBusinessProfileConnection(status) {
+      if (!status || !$('gbpConnectionBadge')) return;
+      const connected = status.mode === 'api' && status.selectedLocation;
+      const pending = status.scopeGranted && status.apiAccess !== 'approved';
+      $('gbpConnectionBadge').textContent = connected ? 'API接続済み' : pending ? 'API承認待ち' : status.scopeGranted ? '拠点未選択' : '手動管理';
+      $('gbpConnectionBadge').className = `badge ${connected ? 'ok' : pending ? 'wait' : 'off'}`;
+      $('gbpLocationBadge').textContent = status.selectedLocation ? '選択済み' : '未選択';
+      $('gbpLocationBadge').className = `badge ${status.selectedLocation ? 'ok' : 'off'}`;
+      $('gbpConnectionText').textContent = connected
+        ? `接続済み：${status.latestSnapshot?.businessName || status.businessLocation?.locationName || status.selectedLocation}`
+        : pending
+          ? 'GoogleビジネスプロフィールAPIの利用承認待ちです。承認前も下の手動記録を利用できます。'
+          : status.scopeGranted
+            ? 'API権限は追加済みです。承認後にアカウントと拠点を選択します。'
+            : 'Googleビジネスプロフィール権限を追加して再接続してください。手動記録は今すぐ利用できます。';
+      $('gbpReconnectButton').disabled = !status.oauthConfigured;
+      $('gbpProbeButton').disabled = !status.scopeGranted;
+      $('gbpSyncButton').disabled = !connected;
+      const message = connected
+        ? 'Googleビジネスプロフィールの基本情報・口コミ・写真・投稿・反応を同期できます。Googleへの書き込みは行いません。'
+        : pending
+          ? 'API承認にはGoogle側の審査が必要です。手動記録・改善タスク管理はそのまま利用できます。'
+          : 'API承認前も、口コミ数・評価・写真・投稿・営業時間を手動で記録できます。';
+      $('gbpAccessMessage').className = `notice ${connected ? 'success' : pending ? 'warn' : 'info'}`;
+      $('gbpAccessMessage').textContent = message;
+    }
+
+    async function loadBusinessProfileAccounts(force = false, silent = false) {
+      if (!state.businessProfile.status?.scopeGranted) return;
+      if (!force && state.businessProfile.accounts.length) return renderBusinessProfileAccountOptions();
+      if (!silent) setLoading(true, 'Googleビジネスプロフィールのアカウントを確認しています');
+      try {
+        const data = await api('/api/business-profile/accounts');
+        state.businessProfile.accounts = data.accounts || [];
+        if (state.businessProfile.status) state.businessProfile.status.apiAccess = 'approved';
+        renderBusinessProfileAccountOptions(); renderBusinessProfileConnection(state.businessProfile.status);
+      } catch (error) {
+        $('gbpAccountSelect').innerHTML = '<option value="">API承認後に取得できます</option>';
+        $('gbpAccountSelect').disabled = true; $('gbpLocationSelect').disabled = true; $('gbpLocationSaveButton').disabled = true;
+        if (!silent) toast(error.message, 'error');
+      } finally { if (!silent) setLoading(false); }
+    }
+
+    function renderBusinessProfileAccountOptions() {
+      const selected = state.businessProfile.status?.selectedAccount || '';
+      const select = $('gbpAccountSelect');
+      select.innerHTML = '<option value="">アカウントを選択</option>' + state.businessProfile.accounts.map((item) => `<option value="${escapeHtml(item.name)}"${item.name === selected ? ' selected' : ''}>${escapeHtml(item.accountName || item.name)}（${escapeHtml(gbpAccountTypeLabel(item.type))}）</option>`).join('');
+      select.disabled = !state.businessProfile.accounts.length;
+      if (selected && state.businessProfile.accounts.some((item) => item.name === selected)) loadBusinessProfileLocations();
+    }
+
+    async function loadBusinessProfileLocations() {
+      const account = $('gbpAccountSelect').value;
+      const select = $('gbpLocationSelect');
+      if (!account) { select.innerHTML = '<option value="">アカウントを選択</option>'; select.disabled = true; $('gbpLocationSaveButton').disabled = true; return; }
+      select.innerHTML = '<option value="">拠点を取得しています</option>'; select.disabled = true;
+      try {
+        const data = await api(`/api/business-profile/locations?account=${encodeURIComponent(account)}`);
+        state.businessProfile.locations = data.locations || [];
+        select.innerHTML = '<option value="">拠点を選択</option>' + state.businessProfile.locations.map((item) => `<option value="${escapeHtml(item.name)}"${item.name === data.selectedLocation ? ' selected' : ''}>${escapeHtml(item.title)}${item.address ? `｜${escapeHtml(item.address)}` : ''}</option>`).join('');
+        select.disabled = !state.businessProfile.locations.length; $('gbpLocationSaveButton').disabled = !state.businessProfile.locations.length;
+      } catch (error) { select.innerHTML = '<option value="">拠点を取得できません</option>'; toast(error.message, 'error'); }
+    }
+
+    async function saveBusinessProfileLocation() {
+      const accountName = $('gbpAccountSelect').value, locationName = $('gbpLocationSelect').value;
+      if (!accountName || !locationName) return toast('Googleビジネスプロフィールのアカウントと拠点を選択してください。', 'error');
+      setLoading(true, 'Googleビジネスプロフィールの拠点を保存しています');
+      try {
+        await api('/api/business-profile/location', { method:'POST', body:{ accountName, locationName } });
+        toast('Googleビジネスプロフィールの拠点を保存しました。', 'success');
+        state.businessProfile = { status:null, accounts:state.businessProfile.accounts, locations:state.businessProfile.locations, summary:null };
+        await Promise.all([loadBusinessProfileView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function syncBusinessProfile() {
+      setLoading(true, 'Googleビジネスプロフィールを同期しています');
+      try {
+        const data = await api('/api/business-profile/sync', { method:'POST', body:{}, timeout:120000 });
+        const partial = (data.partialErrors || []).length;
+        toast(`Googleマップ情報を同期しました。口コミ${data.reviewCount || 0}件${partial ? `・一部${partial}項目は未取得` : ''}`, partial ? 'info' : 'success');
+        state.businessProfile.summary = null; await Promise.all([loadBusinessProfileView(true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    async function saveManualBusinessProfile(event) {
+      event.preventDefault();
+      const body = {
+        businessName:$('gbpManualBusinessName').value, profileStatus:$('gbpManualStatus').value,
+        primaryCategory:$('gbpManualCategory').value, websiteUrl:$('gbpManualWebsite').value, phone:$('gbpManualPhone').value,
+        reviewCount:Number($('gbpManualReviewCount').value || 0), averageRating:$('gbpManualRating').value,
+        unansweredReviewCount:Number($('gbpManualUnanswered').value || 0), photoCount:Number($('gbpManualPhotoCount').value || 0),
+        postCount:Number($('gbpManualPostCount').value || 0), hoursNote:$('gbpManualHours').value,
+      };
+      setLoading(true, 'Googleマップ情報を保存しています');
+      try { const data = await api('/api/business-profile/manual', { method:'POST', body }); state.businessProfile.summary = data; renderBusinessProfileSummary(data); toast('Googleマップ情報を手動記録しました。', 'success'); }
+      catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
+    function renderBusinessProfileSummary(data) {
+      if (!data) return;
+      const snapshot = data.latestSnapshot || data.status?.latestSnapshot || null;
+      const reviews = data.reviewSummary || data.status?.reviewSummary || { total:0,averageRating:null,unanswered:0 };
+      const perf = data.performance?.totals || {};
+      $('gbpProfileStatus').textContent = gbpProfileStatusLabel(snapshot?.profileStatus);
+      $('gbpReviews').textContent = Number(reviews.total || 0).toLocaleString('ja-JP');
+      $('gbpRatingNote').textContent = reviews.averageRating === null || reviews.averageRating === undefined ? '平均評価：未記録' : `平均評価：${Number(reviews.averageRating).toFixed(1)}`;
+      $('gbpUnanswered').textContent = Number(reviews.unanswered || 0).toLocaleString('ja-JP');
+      $('gbpContentCount').textContent = snapshot ? `${snapshot.photoCount || 0} / ${snapshot.postCount || 0}` : '―';
+      $('gbpSearchViews').textContent = (Number(perf.desktopSearch || 0) + Number(perf.mobileSearch || 0)).toLocaleString('ja-JP');
+      $('gbpMapViews').textContent = (Number(perf.desktopMaps || 0) + Number(perf.mobileMaps || 0)).toLocaleString('ja-JP');
+      $('gbpActions').textContent = `${Number(perf.websiteClicks || 0).toLocaleString('ja-JP')} / ${Number(perf.callClicks || 0).toLocaleString('ja-JP')}`;
+      $('gbpDirections').textContent = Number(perf.directionRequests || 0).toLocaleString('ja-JP');
+      $('gbpSnapshotBadge').textContent = snapshot ? `${snapshot.sourceType === 'api' ? 'API' : '手動'}・${formatShortDate(snapshot.snapshotDate)}` : '未記録';
+      $('gbpSnapshotBadge').className = `badge ${snapshot ? 'ok' : 'off'}`;
+      renderBusinessProfileDetails(snapshot, data.status?.businessLocation);
+      renderBusinessProfileReviews(data.reviews || []);
+      renderBusinessProfileTasks(data.tasks || []);
+      populateBusinessProfileManualForm(snapshot, data.status?.businessLocation);
+      if (data.status) renderBusinessProfileConnection(data.status);
+    }
+
+    function renderBusinessProfileDetails(snapshot, location) {
+      const details = [
+        ['ビジネス名', snapshot?.businessName || location?.locationName || '未記録'],
+        ['メインカテゴリ', snapshot?.primaryCategory || location?.primaryCategory || '未記録'],
+        ['ウェブサイト', snapshot?.websiteUrl || location?.websiteUrl || '未記録'],
+        ['電話番号', snapshot?.phone || location?.phone || '未記録'],
+        ['営業時間', gbpHoursText(snapshot?.businessHours) || location?.metadata?.manualHoursNote || '未記録'],
+        ['最終同期', dataDateText(snapshot?.updatedAt || snapshot?.createdAt)],
+      ];
+      $('gbpDetails').innerHTML = details.map(([label,value]) => `<div class="gbp-detail"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`).join('');
+      const mapsUri = snapshot?.rawSnapshot?.mapsUri || location?.metadata?.mapsUri;
+      const reviewUri = snapshot?.rawSnapshot?.newReviewUri || location?.metadata?.newReviewUri;
+      $('gbpMapLinks').innerHTML = `${mapsUri ? `<a class="mini-button" href="${escapeHtml(mapsUri)}" target="_blank" rel="noopener">Googleマップを開く</a>` : ''}${reviewUri ? `<a class="mini-button" href="${escapeHtml(reviewUri)}" target="_blank" rel="noopener">口コミ依頼URL</a>` : ''}` || '<span class="field-help">Google側のURLはAPI同期後に表示します。</span>';
+    }
+
+    function renderBusinessProfileReviews(items) {
+      $('gbpReviewBadge').textContent = `${items.length}件`;
+      $('gbpReviewBadge').className = `badge ${items.length ? 'ok' : 'off'}`;
+      $('gbpReviewTable').innerHTML = items.length ? items.slice(0,20).map((item) => `<tr><td><span class="star-text">${'★'.repeat(Math.max(0,Math.min(5,Number(item.starRating||0))))}</span></td><td><strong>${escapeHtml(item.reviewerName || 'Googleユーザー')}</strong><div class="cell-sub">${escapeHtml(item.comment || 'コメントなし')}</div></td><td>${item.replyComment ? `<span class="badge ok">返信済み</span><div class="cell-sub">${escapeHtml(item.replyComment)}</div>` : '<span class="badge wait">未返信</span>'}</td><td>${escapeHtml(dataDateText(item.createdAt))}</td></tr>`).join('') : '<tr><td colspan="4" class="empty-panel">口コミデータはまだありません。</td></tr>';
+    }
+
+    function renderBusinessProfileTasks(items) {
+      const open = items.filter((item) => !['done','cancelled'].includes(item.status));
+      $('gbpTaskBadge').textContent = `${open.length}件`;
+      $('gbpTaskBadge').className = `badge ${open.length ? 'wait' : 'ok'}`;
+      $('gbpTaskTable').innerHTML = items.length ? items.slice(0,30).map((item) => `<tr><td><strong>${escapeHtml(item.title)}</strong><div class="cell-sub">${escapeHtml(item.description || gbpTaskTypeLabel(item.taskType))}</div></td><td>${item.priority}</td><td>${escapeHtml(item.dueDate || '未設定')}</td><td><span class="badge ${item.status === 'done' ? 'ok' : item.status === 'doing' ? 'wait' : 'off'}">${escapeHtml(gbpTaskStatusLabel(item.status))}</span></td><td><div class="row-actions">${item.status !== 'done' ? `<button class="mini-button" type="button" data-gbp-task-action="done" data-id="${escapeHtml(item.id)}">完了</button>` : ''}<button class="mini-button danger" type="button" data-gbp-task-action="delete" data-id="${escapeHtml(item.id)}">削除</button></div></td></tr>`).join('') : '<tr><td colspan="5" class="empty-panel">Googleマップ改善タスクはありません。</td></tr>';
+    }
+
+    async function createBusinessProfileTask(event) {
+      event.preventDefault();
+      const title = $('gbpTaskTitle').value.trim(); if (!title) return;
+      try { await api('/api/business-profile/tasks', { method:'POST', body:{ title, taskType:$('gbpTaskType').value, priority:Number($('gbpTaskPriority').value), status:'todo' } }); $('gbpTaskTitle').value=''; state.businessProfile.summary=null; await loadBusinessProfileView(true); toast('Googleマップ改善タスクを追加しました。','success'); }
+      catch (error) { toast(error.message,'error'); }
+    }
+
+    async function handleBusinessProfileTaskClick(event) {
+      const button = event.target.closest('[data-gbp-task-action]'); if (!button) return;
+      const id = button.dataset.id, action = button.dataset.gbpTaskAction;
+      try {
+        if (action === 'done') await api(`/api/business-profile/tasks/${id}`, { method:'PATCH', body:{ status:'done' } });
+        if (action === 'delete') { if (!confirm('このGoogleマップ改善タスクを削除しますか？')) return; await api(`/api/business-profile/tasks/${id}`, { method:'DELETE' }); }
+        state.businessProfile.summary=null; await loadBusinessProfileView(true);
+      } catch (error) { toast(error.message,'error'); }
+    }
+
+    function populateBusinessProfileManualForm(snapshot, location) {
+      $('gbpManualBusinessName').value = snapshot?.businessName || location?.locationName || 'DPRO SHOP';
+      $('gbpManualStatus').value = snapshot?.profileStatus || 'unknown';
+      $('gbpManualCategory').value = snapshot?.primaryCategory || location?.primaryCategory || '';
+      $('gbpManualWebsite').value = snapshot?.websiteUrl || location?.websiteUrl || 'https://dpro-shop.com/';
+      $('gbpManualPhone').value = snapshot?.phone || location?.phone || '';
+      $('gbpManualReviewCount').value = snapshot?.reviewCount || 0; $('gbpManualRating').value = snapshot?.averageRating ?? '';
+      $('gbpManualUnanswered').value = snapshot?.unansweredReviewCount || 0; $('gbpManualPhotoCount').value = snapshot?.photoCount || 0; $('gbpManualPostCount').value = snapshot?.postCount || 0;
+      $('gbpManualHours').value = snapshot?.businessHours?.note || location?.metadata?.manualHoursNote || '';
+    }
+
+    function gbpProfileStatusLabel(value) { return ({verified:'確認済み',unverified:'未確認',suspended:'停止中',disabled:'無効',unknown:'未確認'})[value] || '未確認'; }
+    function gbpAccountTypeLabel(value) { return ({PERSONAL:'個人',LOCATION_GROUP:'ビジネスグループ',USER_GROUP:'ユーザーグループ',ORGANIZATION:'組織'})[value] || value || 'アカウント'; }
+    function gbpTaskTypeLabel(value) { return ({basic_info:'基本情報',hours:'営業時間',service:'サービス',photo:'写真',post:'投稿',review_reply:'口コミ返信',verification:'確認',other:'その他'})[value] || value; }
+    function gbpTaskStatusLabel(value) { return ({todo:'未着手',doing:'対応中',waiting:'確認待ち',done:'完了',cancelled:'取消'})[value] || value; }
+    function gbpHoursText(value) { if (!value || typeof value !== 'object') return ''; if (value.note) return value.note; const periods=value.periods||[]; return periods.length ? `${periods.length}件の営業時間設定` : ''; }
+    function formatShortDate(value) { const text=String(value || ''); return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text.replaceAll('-', '/') : (text || '未記録'); }
+    function dataDateText(value) { return value ? formatJapanDate(value) : '未記録'; }
     async function loadConversionView(force = false) {
       if (!state.token) return;
       if (!force && state.conversions.summary) return renderConversionSummary(state.conversions.summary);
@@ -1723,6 +2041,7 @@
         ['service_role非公開', h?.serviceRoleHidden ? '確認済み' : '要確認'],
         ['Google OAuth', h?.googleOauthPrepared ? '準備済み' : '未設定（現段階では正常）'],
         ['PageSpeed API', h?.pagespeedPrepared ? '準備済み' : '未設定'],
+        ['Googleビジネスプロフィール', h?.businessProfileOAuthPrepared ? 'OAuth準備済み' : '手動管理のみ'],
         ['最終確認', h?.checkedAt ? formatJapanDate(h.checkedAt) : '未確認'],
       ];
       $('systemTableBody').innerHTML = rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('');
@@ -1736,7 +2055,7 @@
       button.classList.add('active');
       $('sidebar').classList.remove('open');
 
-      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
+      const ready = ['dashboard', 'keywords', 'search-console', 'conversions', 'pages', 'maps', 'pagespeed', 'tasks', 'reports', 'integrations', 'system'];
       document.querySelectorAll('.view').forEach((section) => section.hidden = true);
       if (ready.includes(view)) {
         $(`view-${view}`).hidden = false;
@@ -1745,6 +2064,7 @@
         if (view === 'integrations') loadGoogleReadiness().catch((error) => toast(error.message, 'error'));
         if (view === 'search-console') loadSearchConsoleView().catch((error) => toast(error.message, 'error'));
         if (view === 'conversions') loadConversionView().catch((error) => toast(error.message, 'error'));
+        if (view === 'maps') loadBusinessProfileView().catch((error) => toast(error.message, 'error'));
         if (view === 'pagespeed') loadPageSpeedView().catch((error) => toast(error.message, 'error'));
         if (view === 'reports') loadReports().catch((error) => toast(error.message, 'error'));
         if (['keywords','pages','tasks'].includes(view)) loadManagementView(view).catch((error) => toast(error.message, 'error'));
@@ -1761,7 +2081,6 @@
 
     function lockedViewMeta(view) {
       const map = {
-                maps: { title: 'Googleマップ', heading: 'SHUKYAKU-10で有効化', description: 'Googleビジネスプロフィール、投稿、写真、口コミ状況を管理します。' },
       };
       return map[view] || { title: '準備中', heading: '今後のSTEPで有効化', description: '機能を順次追加します。' };
     }
@@ -2234,7 +2553,7 @@
       } finally {
         clearSession();
         state.bootstrap = null;
-        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.ga4 = { status:null, properties:[], summary:null }; state.conversions = { summary:null }; state.loadedViews.clear();
+        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.ga4 = { status:null, properties:[], summary:null }; state.conversions = { summary:null }; state.businessProfile = { status:null, accounts:[], locations:[], summary:null }; state.loadedViews.clear();
         showPreauth();
         setLoading(false);
         toast('ログアウトしました。', 'success');
@@ -2366,7 +2685,7 @@
       const map = {
         search_console: { label: 'Google Search Console', description: '検索語・表示回数・クリック・平均掲載順位' },
         ga4: { label: 'Google Analytics 4', description: 'アクセス・行動・相談ボタン・問い合わせ' },
-        business_profile: { label: 'Googleビジネスプロフィール', description: 'マップ情報・投稿・写真・口コミ' },
+        business_profile: { label: 'Googleビジネスプロフィール', description: '基本情報・口コミ・写真・投稿・反応' },
         pagespeed: { label: 'PageSpeed Insights', description: '表示速度・モバイル品質・SEO基本診断' },
         google_ads: { label: 'Google広告', description: '実証後に追加する広告分析オプション' },
       };
