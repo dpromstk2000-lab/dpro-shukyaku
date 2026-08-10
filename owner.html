@@ -1156,7 +1156,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-12-OWNER-20260806';
+    const APP_VERSION = 'SHUKYAKU-13-OWNER-20260810';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1437,7 +1437,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-12`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-13`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -3002,10 +3002,21 @@
     function viewLabel(view) { return ({keywords:'キーワード',pages:'ページ',tasks:'改善タスク'})[view] || 'データ'; }
 
     function openEditor(type, item = null) {
-      state.editor = { type, id: item?.id || '' };
-      $('editorTitle').textContent = `${item ? '編集' : '新規登録'}：${type === 'keyword' ? 'キーワード' : type === 'page' ? 'ページ' : '改善タスク'}`;
-      $('editorSubtitle').textContent = type === 'keyword' ? '検索されたい言葉を、地域・サービス・目的と一緒に管理します。' : type === 'page' ? '公開ページとGoogle登録状態を管理します。' : '実行する作業を具体的に登録します。';
-      $('editorFields').innerHTML = type === 'keyword' ? keywordEditorFields(item) : type === 'page' ? pageEditorFields(item) : taskEditorFields(item);
+      const editorItem = item && typeof item === 'object' ? item : {};
+      const isEdit = Boolean(editorItem.id);
+
+      state.editor = { type, id: editorItem.id || '' };
+      $('editorTitle').textContent = `${isEdit ? '編集' : '新規登録'}：${type === 'keyword' ? 'キーワード' : type === 'page' ? 'ページ' : '改善タスク'}`;
+      $('editorSubtitle').textContent = type === 'keyword'
+        ? '検索されたい言葉を、地域・サービス・目的と一緒に管理します。'
+        : type === 'page'
+          ? '公開ページとGoogle登録状態を管理します。'
+          : '実行する作業を具体的に登録します。';
+      $('editorFields').innerHTML = type === 'keyword'
+        ? keywordEditorFields(editorItem)
+        : type === 'page'
+          ? pageEditorFields(editorItem)
+          : taskEditorFields(editorItem);
       $('editorMessage').innerHTML = '';
       $('editorModal').hidden = false;
       document.body.style.overflow = 'hidden';
