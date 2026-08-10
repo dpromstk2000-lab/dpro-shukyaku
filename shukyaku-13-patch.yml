@@ -1,0 +1,118 @@
+name: SHUKYAKU-13 Patch
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/shukyaku-13-patch.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch owner.html
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path("owner.html")
+          if not path.exists():
+              raise SystemExit("owner.html が見つかりません。")
+
+          text = path.read_text(encoding="utf-8")
+
+          new_open_editor = r'''    function openEditor(type, item = null) {
+      const editorItem = item && typeof item === 'object' ? item : {};
+      const isEdit = Boolean(editorItem.id);
+
+      state.editor = {
+        type,
+        id: editorItem.id || ''
+      };
+
+      $('editorTitle').textContent =
+        `${isEdit ? '編集' : '新規登録'}：${
+          type === 'keyword'
+            ? 'キーワード'
+            : type === 'page'
+              ? 'ページ'
+              : '改善タスク'
+        }`;
+
+      $('editorSubtitle').textContent =
+        type === 'keyword'
+          ? '検索されたい言葉を、地域・サービス・目的と一緒に管理します。'
+          : type === 'page'
+            ? '公開ページとGoogle登録状態を管理します。'
+            : '実行する作業を具体的に登録します。';
+
+      $('editorFields').innerHTML =
+        type === 'keyword'
+          ? keywordEditorFields(editorItem)
+          : type === 'page'
+            ? pageEditorFields(editorItem)
+            : taskEditorFields(editorItem);
+
+      $('editorMessage').innerHTML = '';
+      $('editorModal').hidden = false;
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => {
+        $('editorFields')
+          .querySelector('input,select,textarea')
+          ?.focus();
+      }, 0);
+    }
+
+'''
+
+          pattern = re.compile(
+              r"    function openEditor\(type, item = null\) \{.*?\n    \}\n\n(?=    function closeEditor\(\))",
+              re.S,
+          )
+
+          text, count = pattern.subn(new_open_editor, text, count=1)
+          if count != 1:
+              raise SystemExit(f"openEditor の置換対象が {count} 件でした。安全のため停止します。")
+
+          text = text.replace(
+              "const APP_VERSION = 'SHUKYAKU-12-OWNER-20260806';",
+              "const APP_VERSION = 'SHUKYAKU-13-OWNER-20260810';",
+              1,
+          )
+
+          text = text.replace(
+              "${companyName}｜SHUKYAKU-12",
+              "${companyName}｜SHUKYAKU-13",
+              1,
+          )
+
+          # 安全確認
+          if "SHUKYAKU-13-OWNER-20260810" not in text:
+              raise SystemExit("APP_VERSION の更新確認に失敗しました。")
+          if "${companyName}｜SHUKYAKU-13" not in text:
+              raise SystemExit("画面バージョン表示の更新確認に失敗しました。")
+          if "const editorItem = item && typeof item === 'object' ? item : {};" not in text:
+              raise SystemExit("openEditor 修正確認に失敗しました。")
+
+          path.write_text(text, encoding="utf-8")
+          print("SHUKYAKU-13 owner.html patch OK")
+
+      - name: Remove one-time patch workflow
+        run: rm -f .github/workflows/shukyaku-13-patch.yml
+
+      - name: Commit patched owner.html
+        run: |
+          git config user.name "DPRO SHUKYAKU Auto Patch"
+          git config user.email "actions@users.noreply.github.com"
+          git add owner.html .github/workflows/shukyaku-13-patch.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "SHUKYAKU-13 fix new item editor"
+          git push
