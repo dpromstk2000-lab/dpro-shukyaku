@@ -2955,9 +2955,9 @@
       $('taskTableBody').innerHTML = items.length ? items.map((item) => {
         const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword;
         const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name;
-        const isPageSpeed = item.baseline_metrics?.source === 'pagespeed';
+        const canMeasure = Boolean(item.landing_page_id) && item.status !== 'excluded';
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
-        const measureButton = isPageSpeed && item.status !== 'excluded'
+        const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
@@ -2972,7 +2972,7 @@
     function renderTaskImpact(item) {
       const baseline = item.baseline_metrics || {};
       const result = item.result_metrics || {};
-      if (baseline.source !== 'pagespeed') return '<div class="impact-box"><span class="table-sub">手動タスク</span></div>';
+      if (baseline.source !== 'pagespeed' && !result.measuredAt) return '<div class="impact-box"><span class="table-sub">未測定</span></div>';
       const before = result.before || baseline;
       const after = result.after || null;
       const beforeScore = scoreDisplay(before.performanceScore);
