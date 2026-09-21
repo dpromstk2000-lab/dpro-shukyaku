@@ -1109,7 +1109,23 @@
                   <div class="field"><label for="companyEditPlan">利用プラン</label><select id="companyEditPlan" class="input"><option value="starter">スターター</option><option value="standard">スタンダード</option><option value="growth">グロース</option><option value="custom">カスタム</option></select></div>
                   <div class="field wide"><label for="companyEditNotes">社内メモ</label><input id="companyEditNotes" class="input"></div>
                 </div>
-                <button id="companyBasicSaveButton" class="secondary section-space" type="button">基本設定を保存</button>
+                <div class="section-space"><h3 style="margin:0 0 10px">制作・インフラ管理</h3>
+                  <div class="credential-note" style="margin-bottom:10px">所在情報だけを保存します。パスワード、Secret、APIキー、Token、service_roleは保存しません。</div>
+                  <div class="company-form-grid">
+                    <div class="field"><label for="companyInfraSystemName">導入システム名</label><input id="companyInfraSystemName" class="input" placeholder="例：DPRO GREEN"></div>
+                    <div class="field"><label for="companyInfraEnvironment">環境状態</label><input id="companyInfraEnvironment" class="input" placeholder="production / preparing"></div>
+                    <div class="field"><label for="companyInfraGithub">GitHub Repository</label><input id="companyInfraGithub" class="input" placeholder="owner/repository"></div>
+                    <div class="field"><label for="companyInfraWorker">Cloudflare Worker名</label><input id="companyInfraWorker" class="input"></div>
+                    <div class="field wide"><label for="companyInfraWorkerUrl">Worker URL</label><input id="companyInfraWorkerUrl" class="input" placeholder="https://...workers.dev"></div>
+                    <div class="field"><label for="companyInfraSupabaseProject">Supabase Project名</label><input id="companyInfraSupabaseProject" class="input"></div>
+                    <div class="field"><label for="companyInfraSupabaseProjectId">Supabase Project ID</label><input id="companyInfraSupabaseProjectId" class="input"></div>
+                    <div class="field"><label for="companyInfraSchema">Supabase schema</label><input id="companyInfraSchema" class="input"></div>
+                    <div class="field wide"><label for="companyInfraPublicUrl">公開URL</label><input id="companyInfraPublicUrl" class="input" placeholder="https://..."></div>
+                    <div class="field"><label for="companyInfraDomain">ドメイン</label><input id="companyInfraDomain" class="input" placeholder="example.com"></div>
+                    <div class="field"><label for="companyInfraLine">LINE公式状態</label><input id="companyInfraLine" class="input" placeholder="未作成 / 作成済み / 連携済み"></div>
+                  </div>
+                </div>
+                <button id="companyBasicSaveButton" class="secondary section-space" type="button">基本・制作情報を保存</button>
                 <div class="section-space"><h3 style="margin:0 0 10px">管理者パスワード再発行</h3><div class="field"><input id="companyResetPassword" class="input" type="password" placeholder="英字と数字 8〜32文字"></div><button id="companyResetPasswordButton" class="danger-button" type="button">パスワードを再設定</button></div>
               </div>
               <div>
@@ -1156,7 +1172,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-13-OWNER-20260810';
+    const APP_VERSION = 'SHUKYAKU-13-OWNER-20260921';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1615,6 +1631,18 @@
       $('companyEditSetupStatus').value=item.onboarding?.setupStatus||'ready';
       $('companyEditPlan').value=item.onboarding?.planCode||'standard';
       $('companyEditNotes').value=item.onboarding?.notes||'';
+      const infra=item.infrastructure||{};
+      $('companyInfraSystemName').value=infra.systemName||'';
+      $('companyInfraEnvironment').value=infra.environment||'';
+      $('companyInfraGithub').value=infra.githubRepository||'';
+      $('companyInfraWorker').value=infra.cloudflareWorker||'';
+      $('companyInfraWorkerUrl').value=infra.workerUrl||'';
+      $('companyInfraSupabaseProject').value=infra.supabaseProject||'';
+      $('companyInfraSupabaseProjectId').value=infra.supabaseProjectId||'';
+      $('companyInfraSchema').value=infra.supabaseSchema||'';
+      $('companyInfraPublicUrl').value=infra.publicUrl||'';
+      $('companyInfraDomain').value=infra.domain||'';
+      $('companyInfraLine').value=infra.lineOfficialStatus||'';
       const enabled=(item.featureFlags||[]).filter((flag)=>flag.enabled).map((flag)=>flag.feature_key);
       $('companyEditFeatures').innerHTML=featureCheckboxHtml('edit',enabled);
       renderOnboardingSteps('companyDetailSteps',item.onboarding?.setupSteps||{});
@@ -1643,7 +1671,18 @@
       const item=state.companies.selected;if (!item) return;
       setLoading(true,'契約会社の設定を保存しています');
       try {
-        const data=await api(`/api/admin/companies/${item.id}`,{method:'PATCH',body:{status:$('companyEditStatus').value,setupStatus:$('companyEditSetupStatus').value,planCode:$('companyEditPlan').value,notes:$('companyEditNotes').value.trim()}});
+        const data=await api(`/api/admin/companies/${item.id}`,{method:'PATCH',body:{
+          status:$('companyEditStatus').value,setupStatus:$('companyEditSetupStatus').value,
+          planCode:$('companyEditPlan').value,notes:$('companyEditNotes').value.trim(),
+          infrastructure:{
+            systemName:$('companyInfraSystemName').value.trim(),environment:$('companyInfraEnvironment').value.trim(),
+            githubRepository:$('companyInfraGithub').value.trim(),cloudflareWorker:$('companyInfraWorker').value.trim(),
+            workerUrl:$('companyInfraWorkerUrl').value.trim(),supabaseProject:$('companyInfraSupabaseProject').value.trim(),
+            supabaseProjectId:$('companyInfraSupabaseProjectId').value.trim(),supabaseSchema:$('companyInfraSchema').value.trim(),
+            publicUrl:$('companyInfraPublicUrl').value.trim(),domain:$('companyInfraDomain').value.trim(),
+            lineOfficialStatus:$('companyInfraLine').value.trim()
+          }
+        }});
         state.companies.selected=data.item;toast('基本設定を保存しました。','success');await loadCompaniesView(true);await selectCompany(item.id);
       } catch (error) { toast(error.message,'error'); }
       finally { setLoading(false); }
