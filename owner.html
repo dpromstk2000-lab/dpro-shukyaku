@@ -2959,13 +2959,16 @@
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
+        const qaPending = Boolean(item.result_metrics?.measuredAt) && item.result_metrics?.humanQa?.status === 'pending';
+        const qaButtons = qaPending
+          ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','pass')">QA合格</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','rollback')">ROLLBACK</button>` : '';
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
         <td>${escapeHtml(item.due_date || '未設定')}</td>
         <td>${renderTaskImpact(item)}</td>
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
-        <td><div class="row-actions">${measureButton}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
+        <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
       }).join('') : emptyTableRow(7, '条件に合う改善タスクがありません。');
     }
 
@@ -2981,10 +2984,12 @@
       }
       const afterScore = scoreDisplay(after.performanceScore);
       const outcome = result.outcome || 'inconclusive';
+      const humanQa = result.humanQa || {};
       const delta = result.comparison?.performanceScoreDelta;
       const lcpBefore = formatMilliseconds(before.largestContentfulPaintMs);
       const lcpAfter = formatMilliseconds(after.largestContentfulPaintMs);
-      return `<div class="impact-box"><div class="impact-line"><span>Performance</span><strong>${escapeHtml(beforeScore)} → ${escapeHtml(afterScore)}</strong><span class="impact-pill ${escapeHtml(outcome)}">${escapeHtml(outcomeLabel(outcome, delta))}</span></div><div class="impact-sub">LCP ${escapeHtml(lcpBefore)} → ${escapeHtml(lcpAfter)}｜${escapeHtml(formatJapanDate(result.measuredAt))}</div></div>`;
+      const qaLabel = humanQa.status === 'pending' ? '｜HUMAN QA待ち' : humanQa.status === 'passed' ? '｜QA PASS' : humanQa.status === 'rollback' ? '｜QA FAIL / ROLLBACK' : '';
+      return `<div class="impact-box"><div class="impact-line"><span>Performance</span><strong>${escapeHtml(beforeScore)} → ${escapeHtml(afterScore)}</strong><span class="impact-pill ${escapeHtml(outcome)}">${escapeHtml(outcomeLabel(outcome, delta))}</span></div><div class="impact-sub">LCP ${escapeHtml(lcpBefore)} → ${escapeHtml(lcpAfter)}｜${escapeHtml(formatJapanDate(result.measuredAt))}${escapeHtml(qaLabel)}</div></div>`;
     }
 
     function outcomeLabel(outcome, delta) {
@@ -3112,6 +3117,25 @@
       finally { setLoading(false); }
     }
 
+
+    async function reviewTaskHumanQa(id, decision) {
+      const item = state.tasks.find((task) => task.id === id);
+      if (!item) return;
+      const rollback = decision === 'rollback';
+      const message = rollback
+        ? `「${item.title}」をHUMAN QA FAILとしてROLLBACK記録しますか？\n速度の点数が改善していても、表示・操作に問題があった場合はこちらです。`
+        : `「${item.title}」をHUMAN QA PASSとして完了しますか？\nPC・スマホの表示と主要操作を確認済みの場合だけ合格にしてください。`;
+      if (!confirm(message)) return;
+      setLoading(true, rollback ? 'ROLLBACKを記録しています' : 'HUMAN QA合格を記録しています');
+      try {
+        await api(`/api/tasks/${encodeURIComponent(id)}/qa`, { method:'POST', body:{ decision } });
+        toast(rollback ? 'QA FAIL / ROLLBACKを記録しました。' : 'HUMAN QA PASSで完了しました。', rollback ? 'warn' : 'success');
+        state.loadedViews.delete('tasks');
+        await Promise.allSettled([loadManagementView('tasks', true), refreshBootstrap()]);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { setLoading(false); }
+    }
+
     window.SHUKYAKU = {
       edit(type,id) {
         const collection = type === 'keyword' ? state.keywords : type === 'page' ? state.pages : state.tasks;
@@ -3120,6 +3144,7 @@
       },
       remove(type,id) { deleteManagementItem(type,id); },
       measureTask(id) { measureTaskImpact(id); },
+      reviewTaskQa(id,decision) { reviewTaskHumanQa(id,decision); },
       openReport(id) { openReport(id); },
       auditPage(id) {
         const button = document.querySelector('[data-view="pagespeed"]');
