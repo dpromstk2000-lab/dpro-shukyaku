@@ -42,7 +42,7 @@ const ctx={
  toast:(...a)=>alerts.push(a),api:()=>{calls++},escapeHtml,
  TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],
  optionLabel:(opts,v)=>opts.find(([k])=>k===v)?.[1]||v,
- summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',renderTaskNextActions:()=>{},
+ summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',renderTaskNextActions:()=>{},emptyTableRow:()=>'',
  console
 };
 vm.createContext(ctx);
