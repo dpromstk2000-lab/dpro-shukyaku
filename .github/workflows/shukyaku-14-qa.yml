@@ -1,4 +1,4 @@
-name: SHUKYAKU-15 Isolated QA
+name: SHUKYAKU-16 Isolated QA
 on:
   workflow_dispatch:
   pull_request:
@@ -9,7 +9,7 @@ on:
       - .github/workflows/shukyaku-14-qa.yml
   push:
     branches:
-      - shukyaku-15-version-task-ux-20261012
+      - shukyaku-16-task-priority-20261012
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
@@ -42,12 +42,14 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s = Path('owner.html').read_text()
-          assert "SHUKYAKU-15-OWNER-20261012" in s
-          assert '${companyName}｜SHUKYAKU-15' in s
+          assert "SHUKYAKU-16-OWNER-20261012" in s
+          assert '${companyName}｜SHUKYAKU-16' in s
           assert 'SHUKYAKU-13' not in s
-          assert 'const overdueCount = items.filter' in s
+          assert 'const overdueCount = items.filter(isTaskOverdue).length' in s
+          assert 'Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))' in s
+          assert 'const isTaskOverdue = (item)' in s
           assert 'item.due_date < todayJst' in s
-          print('SHUKYAKU-15 VERSION AND OVERDUE QA PASS')
+          print('SHUKYAKU-16 VERSION AND OVERDUE QA PASS')
           PY
       - name: JavaScript syntax validation
         run: |
