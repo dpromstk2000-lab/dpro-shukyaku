@@ -402,7 +402,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-15</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-16</p>
         </div>
       </div>
       <div class="top-actions">
@@ -1172,7 +1172,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-15-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-16-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1453,7 +1453,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-15`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-16`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -2978,12 +2978,13 @@
       const search = $('taskSearch').value.trim().toLowerCase();
       const status = $('taskStatusFilter').value;
       const priority = $('taskPriorityFilter').value;
+      const todayJst = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'});
+      const isTaskOverdue = (item) => Boolean(item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status));
       const items = state.tasks.filter((item) => {
         const hay = [item.title,item.reason,item.recommended_action,item.description].join(' ').toLowerCase();
         return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority);
-      });
-      const todayJst = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'});
-      const overdueCount = items.filter((item) => item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status)).length;
+      }).sort((a,b) => Number(isTaskOverdue(b)) - Number(isTaskOverdue(a)) || Number(a.priority ?? 99) - Number(b.priority ?? 99) || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31')));
+      const overdueCount = items.filter(isTaskOverdue).length;
       $('taskCountBadge').textContent = `${items.length}件${overdueCount ? `（期限超過${overdueCount}件）` : ''}`;
       const sm = state.managementSummary || {};
       const impact = state.taskImpactSummary || {};
@@ -3006,7 +3007,7 @@
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
-        <td>${escapeHtml(item.due_date || '未設定')}${item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
+        <td>${escapeHtml(item.due_date || '未設定')}${isTaskOverdue(item) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
         <td>${renderTaskImpact(item)}</td>
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
         <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
