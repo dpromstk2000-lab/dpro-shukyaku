@@ -402,7 +402,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-16</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-17</p>
         </div>
       </div>
       <div class="top-actions">
@@ -1172,7 +1172,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-16-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-17-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1453,7 +1453,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-16`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-17`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -3001,10 +3001,11 @@
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
+        const pausedGuide = item.status === 'paused' ? '<div class="table-sub" style="margin-top:5px">保留中：編集から保留理由・再開条件・確認日を記録してください。ROLLBACK後の再測定は不可です。</div>' : '';
         const qaPending = Boolean(item.result_metrics?.measuredAt) && item.result_metrics?.humanQa?.status === 'pending';
         const qaButtons = qaPending
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','pass')">QA合格</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','rollback')">ROLLBACK</button>` : '';
-        return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
+        return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div>${pausedGuide}</td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
         <td>${escapeHtml(item.due_date || '未設定')}${isTaskOverdue(item) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
@@ -3089,7 +3090,7 @@
     function taskEditorFields(item={}) {
       const keywordOptions = [['','対象なし'],...state.keywords.map((x) => [x.id,x.keyword])];
       const pageOptions = [['','対象なし'],...state.pages.map((x) => [x.id,x.page_name])];
-      return `${field('タスク名','title',item.title || '',true,'text','full')}${selectField('対象キーワード','targetKeywordId',keywordOptions,item.target_keyword_id || '')}${selectField('対象ページ','landingPageId',pageOptions,item.landing_page_id || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',TASK_STATUS_OPTIONS,item.status || 'todo')}${field('期限','dueDate',item.due_date || '',false,'date')}${textareaField('改善理由','reason',item.reason || '','full')}${textareaField('推奨作業','recommendedAction',item.recommended_action || '','full')}`;
+      return `${field('タスク名','title',item.title || '',true,'text','full')}${selectField('対象キーワード','targetKeywordId',keywordOptions,item.target_keyword_id || '')}${selectField('対象ページ','landingPageId',pageOptions,item.landing_page_id || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',TASK_STATUS_OPTIONS,item.status || 'todo')}${field('期限','dueDate',item.due_date || '',false,'date')}${textareaField('改善理由','reason',item.reason || '','full')}${textareaField('推奨作業（保留中は再開条件・次回確認日も記載）','recommendedAction',item.recommended_action || '','full')}${item.status === 'paused' ? '<p class="table-sub">保留理由は「改善理由」、再開条件と次回確認日は「推奨作業」に記録できます。専用DB項目は未追加です。</p>' : ''}`;
     }
 
     function field(label,name,value,required=false,type='text',extra='') { return `<div class="field ${extra}"><label>${escapeHtml(label)}${required ? ' <span style="color:var(--danger)">必須</span>' : ''}</label><input class="input" name="${escapeHtml(name)}" type="${escapeHtml(type)}" value="${escapeHtml(value)}" ${required ? 'required' : ''}></div>`; }
