@@ -24,7 +24,7 @@ const $cache={};
 const $=id=>($cache[id]??={value:'',textContent:'',innerHTML:'',disabled:false});
 const state={editor:{type:'task',id:'x',pauseOriginal:{reason:'',resume:'',review:''}},tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],loadedViews:new Set(),bootstrap:null,managementSummary:{},taskImpactSummary:{}};
 const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-const ctx={$,state,escapeHtml,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],console,Date,summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',field:()=>'',selectField:()=>'',textareaField:()=>'',setLoading:()=>{},toast:()=>{},closeEditor:()=>{},loadManagementView:async()=>{},refreshBootstrap:async()=>{},api:async()=>{}};
+const ctx={$,state,escapeHtml,document:{querySelectorAll:()=>[]},TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],console,Date,summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',field:()=>'',selectField:()=>'',textareaField:()=>'',setLoading:()=>{},toast:()=>{},closeEditor:()=>{},loadManagementView:async()=>{},refreshBootstrap:async()=>{},api:async()=>{}};
 vm.createContext(ctx);
 vm.runInContext(['parsePauseNotes','buildPauseNotes','taskPauseHelper','taskPauseReviewState','renderTasks'].map(extract).join('\n')+extractAsync('saveEditor')+'\n;globalThis.qa={parsePauseNotes,buildPauseNotes,taskPauseHelper,renderTasks,saveEditor};',ctx);
 const {parsePauseNotes,buildPauseNotes,taskPauseHelper,renderTasks,saveEditor}=ctx.qa;
