@@ -3040,8 +3040,10 @@
         || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31'))
         || String(a.title || '').localeCompare(String(b.title || ''))
       );
-      section.hidden = queue.length === 0;
-      if (!queue.length) { section.innerHTML = ''; return; }
+      const filtersActive = (state.taskFocus || 'all') !== 'all'
+        || ['taskSearch','taskStatusFilter','taskPriorityFilter','taskReviewFilter'].some((id) => Boolean($(id).value));
+      section.hidden = queue.length === 0 || filtersActive;
+      if (section.hidden) { section.innerHTML = ''; return; }
       const cards = queue.slice(0,2).map((item) => {
         const dueLabel = overdue(item) ? '期限超過：' + item.due_date
           : item.due_date ? '期限：' + item.due_date : '期限未設定';
@@ -3056,7 +3058,7 @@
           + '<button type="button" data-task-open-id="' + escapeHtml(item.id) + '">編集して対応を確認</button>'
           + '</div>';
       }).join('');
-      section.innerHTML = '<div class="task-next-head"><h2>次に対応する改善タスク</h2><p>未完了・対応可能 ' + queue.length
+      section.innerHTML = '<div class="task-next-head"><h2>全体の優先対応タスク</h2><p>未完了・対応可能 ' + queue.length
         + '件から優先度順に最大2件を表示。編集するまでデータは変更されません。</p></div>'
         + '<div class="task-next-grid">' + cards + '</div>';
     }
