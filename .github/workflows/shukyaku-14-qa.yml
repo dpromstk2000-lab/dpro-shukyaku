@@ -1,4 +1,4 @@
-name: SHUKYAKU-17 Isolated QA
+name: SHUKYAKU-18 Isolated QA
 on:
   workflow_dispatch:
   pull_request:
@@ -7,9 +7,10 @@ on:
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
+      - .github/scripts/shukyaku-18-pause-qa.cjs
   push:
     branches:
-      - shukyaku-17-paused-task-guidance-20261012
+      - shukyaku-18-paused-editor-20261012
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
@@ -42,18 +43,26 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s = Path('owner.html').read_text()
-          assert "SHUKYAKU-17-OWNER-20261012" in s
-          assert '${companyName}｜SHUKYAKU-17' in s
+          assert "SHUKYAKU-18-OWNER-20261012" in s
+          assert '${companyName}｜SHUKYAKU-18' in s
           assert 'SHUKYAKU-13' not in s
           assert 'const overdueCount = items.filter(isTaskOverdue).length' in s
           assert 'Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))' in s
           assert 'const isTaskOverdue = (item)' in s
           assert 'const pausedGuide = item.status' in s
+          assert 'function parsePauseNotes(source = ' in s
+          assert 'function buildPauseNotes(source, notes)' in s
+          assert 'function taskPauseHelper(item = {})' in s
+          assert "delete payload.pauseReasonDraft" in s
+          assert "delete payload.pauseResumeDraft" in s
+          assert "delete payload.pauseReviewDraft" in s
           assert '保留理由・再開条件・確認日' in s
           assert '専用DB項目は未追加です。' in s
           assert 'item.due_date < todayJst' in s
-          print('SHUKYAKU-17 VERSION AND OVERDUE QA PASS')
+          print('SHUKYAKU-18 VERSION AND OVERDUE QA PASS')
           PY
+      - name: Run paused-task editor regression QA
+        run: node .github/scripts/shukyaku-18-pause-qa.cjs
       - name: JavaScript syntax validation
         run: |
           python3 - <<'PY'
@@ -101,7 +110,7 @@ jobs:
           const elements={};
           const $=id=>(elements[id]??=( {value:'',textContent:'',innerHTML:''} ));
           const state={tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],managementSummary:{},taskImpactSummary:{}};
-          const ctx={$,state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
+          const ctx={$,state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),parsePauseNotes:()=>({reason:'',resume:'',review:''}),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
           vm.createContext(ctx);
           vm.runInContext(fn[0]+';globalThis.render=renderTasks;',ctx);
           function check(status,qa,due,measure,overdue){
