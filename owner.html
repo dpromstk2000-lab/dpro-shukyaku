@@ -402,7 +402,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-18</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-19</p>
         </div>
       </div>
       <div class="top-actions">
@@ -897,7 +897,9 @@
                 <input id="taskSearch" class="compact-input" type="search" placeholder="タスク名・理由で検索">
                 <select id="taskStatusFilter" class="compact-select"><option value="">すべての状態</option></select>
                 <select id="taskPriorityFilter" class="compact-select"><option value="">すべての優先度</option><option value="1">優先度1</option><option value="2">優先度2</option><option value="3">優先度3</option><option value="4">優先度4</option><option value="5">優先度5</option></select>
+                <select id="taskReviewFilter" class="compact-select" aria-label="保留タスクの次回確認日で絞り込み"><option value="">すべての確認日</option><option value="due">確認日到来・超過</option><option value="soon">7日以内の確認予定</option><option value="missing">確認日未設定の保留</option></select>
               </div>
+              <span id="taskReviewSummary" class="badge off" aria-live="polite">保留確認：集計中</span>
               <span id="taskCountBadge" class="badge ok">0件</span>
             </div>
             <div class="table-wrap"><table class="data-table" style="min-width:1120px"><thead><tr><th>改善タスク</th><th>対象</th><th>優先度</th><th>期限</th><th>実施前後</th><th>状態</th><th>操作</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
@@ -1172,7 +1174,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-18-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-19-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1278,6 +1280,7 @@
       $('taskSearch').addEventListener('input', renderTasks);
       $('taskStatusFilter').addEventListener('change', renderTasks);
       $('taskPriorityFilter').addEventListener('change', renderTasks);
+      $('taskReviewFilter').addEventListener('change', renderTasks);
       $('companyRefreshButton').addEventListener('click', () => loadCompaniesView(true));
       $('companyCreateForm').addEventListener('submit', createCompany);
       $('companyCreatePlan').addEventListener('change', applyCreatePlanFeatures);
@@ -1453,7 +1456,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-18`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-19`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -2974,16 +2977,42 @@
         <td><div class="row-actions">${item.status === 'published' ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.auditPage('${item.id}')">診断</button>` : ''}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('page','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('page','${item.id}')">削除</button></div></td></tr>`).join('') : emptyTableRow(6, '登録ページがありません。');
     }
 
+
+    // These reminders are visual and derived from existing pause notes: no timers,
+    // notifications, new API endpoints, or background writes.
+    function taskPauseReviewState(item, todayJst) {
+      if (item.status !== 'paused') return 'not-paused';
+      const review = parsePauseNotes(item.recommended_action || '').review;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(review)) return 'missing';
+      const day = new Date(review + 'T00:00:00Z');
+      if (Number.isNaN(day.getTime()) || day.toISOString().slice(0,10) !== review) return 'missing';
+      const today = new Date(todayJst + 'T00:00:00Z');
+      const next7 = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0,10);
+      if (review <= todayJst) return 'due';
+      if (review <= next7) return 'soon';
+      return 'later';
+    }
+
     function renderTasks() {
       const search = $('taskSearch').value.trim().toLowerCase();
       const status = $('taskStatusFilter').value;
       const priority = $('taskPriorityFilter').value;
+      const reviewFilter = $('taskReviewFilter').value;
       const todayJst = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'});
+      const reviewKind = (item) => taskPauseReviewState(item, todayJst);
+      const allReviewDue = state.tasks.filter((item) => reviewKind(item) === 'due').length;
+      const allReviewSoon = state.tasks.filter((item) => reviewKind(item) === 'soon').length;
+      $('taskReviewSummary').textContent = `保留確認：要確認${allReviewDue}件・7日以内${allReviewSoon}件`;
+      $('taskReviewSummary').className = 'badge ' + (allReviewDue ? 'wait' : allReviewSoon ? 'ok' : 'off');
       const isTaskOverdue = (item) => Boolean(item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status));
       const items = state.tasks.filter((item) => {
         const hay = [item.title,item.reason,item.recommended_action,item.description].join(' ').toLowerCase();
-        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority);
-      }).sort((a,b) => Number(isTaskOverdue(b)) - Number(isTaskOverdue(a)) || Number(a.priority ?? 99) - Number(b.priority ?? 99) || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31')));
+        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority) && (!reviewFilter || reviewKind(item) === reviewFilter);
+      }).sort((a,b) => Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))
+        || Number(reviewKind(b) === 'due') - Number(reviewKind(a) === 'due')
+        || Number(reviewKind(b) === 'soon') - Number(reviewKind(a) === 'soon')
+        || Number(a.priority ?? 99) - Number(b.priority ?? 99)
+        || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31')));
       const overdueCount = items.filter(isTaskOverdue).length;
       $('taskCountBadge').textContent = `${items.length}件${overdueCount ? `（期限超過${overdueCount}件）` : ''}`;
       const sm = state.managementSummary || {};
@@ -3002,8 +3031,8 @@
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
         const pauseNotes = item.status === 'paused' ? parsePauseNotes(item.recommended_action) : null;
-        const pauseReviewLate = pauseNotes && /^\d{4}-\d{2}-\d{2}$/.test(pauseNotes.review) && pauseNotes.review < todayJst;
-        const pauseReviewLabel = pauseNotes?.review ? '<span class="badge ' + (pauseReviewLate ? 'wait' : 'off') + '">' + (pauseReviewLate ? '確認日超過：' : '次回確認：') + escapeHtml(pauseNotes.review) + '</span>' : '';
+        const pauseReviewStatus = reviewKind(item);
+        const pauseReviewLabel = pauseNotes?.review ? '<span class="badge ' + (pauseReviewStatus === 'due' ? 'wait' : pauseReviewStatus === 'soon' ? 'ok' : 'off') + '">' + (pauseReviewStatus === 'due' ? (pauseNotes.review === todayJst ? '本日確認：' : '確認日超過：') : pauseReviewStatus === 'soon' ? '7日以内の確認：' : '次回確認：') + escapeHtml(pauseNotes.review) + '</span>' : '';
         const pauseReasonLabel = pauseNotes?.reason ? '<div class="table-sub">保留理由：' + escapeHtml(pauseNotes.reason) + '</div>' : '';
         const pauseResumeLabel = pauseNotes?.resume ? '<div class="table-sub">再開条件：' + escapeHtml(pauseNotes.resume) + '</div>' : '';
         const pausedGuide = item.status === 'paused' ? '<div class="table-sub" style="margin-top:5px">保留中：編集から保留理由・再開条件・確認日を記録してください。ROLLBACK後の再測定は不可です。</div>' + pauseReasonLabel + pauseResumeLabel + pauseReviewLabel : '';
