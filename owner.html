@@ -2994,7 +2994,7 @@
       $('taskTableBody').innerHTML = items.length ? items.map((item) => {
         const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword;
         const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name;
-        const canMeasure = Boolean(item.landing_page_id) && !['excluded','on_hold','hold'].includes(item.status) && item.result_metrics?.humanQa?.status !== 'rollback';
+        const canMeasure = Boolean(item.landing_page_id) && !['excluded','paused'].includes(item.status) && item.result_metrics?.humanQa?.status !== 'rollback';
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
@@ -3004,7 +3004,7 @@
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
-        <td>${escapeHtml(item.due_date || '未設定')}${item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}) && !['done','excluded','hold','on_hold'].includes(item.status) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
+        <td>${escapeHtml(item.due_date || '未設定')}${item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}) && !['done','excluded','paused'].includes(item.status) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
         <td>${renderTaskImpact(item)}</td>
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
         <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
@@ -3139,6 +3139,10 @@
     async function measureTaskImpact(id) {
       const item = state.tasks.find((task) => task.id === id);
       if (!item) return;
+      if (['excluded','paused'].includes(item.status) || item.result_metrics?.humanQa?.status === 'rollback') {
+        toast('保留・対象外・ROLLBACK済みのタスクは再測定できません。', 'warn');
+        return;
+      }
       const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name || '対象ページ';
       const strategy = strategyLabel(item.baseline_metrics?.strategy || 'mobile');
       if (!confirm(`「${item.title}」の効果を、${page}の${strategy}診断で測定しますか？\n1分程度かかる場合があります。`)) return;
