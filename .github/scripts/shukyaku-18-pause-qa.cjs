@@ -26,7 +26,7 @@ const state={editor:{type:'task',id:'x',pauseOriginal:{reason:'',resume:'',revie
 const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const ctx={$,state,escapeHtml,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],console,Date,summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',field:()=>'',selectField:()=>'',textareaField:()=>'',setLoading:()=>{},toast:()=>{},closeEditor:()=>{},loadManagementView:async()=>{},refreshBootstrap:async()=>{},api:async()=>{}};
 vm.createContext(ctx);
-vm.runInContext(['parsePauseNotes','buildPauseNotes','taskPauseHelper','renderTasks'].map(extract).join('\n')+extractAsync('saveEditor')+'\n;globalThis.qa={parsePauseNotes,buildPauseNotes,taskPauseHelper,renderTasks,saveEditor};',ctx);
+vm.runInContext(['parsePauseNotes','buildPauseNotes','taskPauseHelper','taskPauseReviewState','renderTasks'].map(extract).join('\n')+extractAsync('saveEditor')+'\n;globalThis.qa={parsePauseNotes,buildPauseNotes,taskPauseHelper,renderTasks,saveEditor};',ctx);
 const {parsePauseNotes,buildPauseNotes,taskPauseHelper,renderTasks,saveEditor}=ctx.qa;
 const original='Keep this existing recommendation.\nDo not remove.';
 const notes={reason:'動作確認が必要',resume:'安全な代替策が確定',review:'2026-10-22'};
