@@ -1,0 +1,44 @@
+name: SHUKYAKU-14 Isolated QA
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - shukyaku-14-safe-task-qa-20261012
+    paths:
+      - owner.html
+      - .github/workflows/shukyaku-14-qa.yml
+permissions:
+  contents: read
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate task guards and HTML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('owner.html').read_text(encoding='utf-8')
+          assert s.count('<script>') == 1 and s.count('</script>') == 1
+          assert "['todo','未着手']" in s and "['paused','保留']" in s
+          assert "item.result_metrics?.humanQa?.status !== 'rollback'" in s
+          assert "['excluded','paused'].includes(item.status)" in s
+          assert "保留・対象外・ROLLBACK済みのタスクは再測定できません" in s
+          assert "期限超過" in s
+          assert "timeZone:'Asia/Tokyo'" in s
+          assert s.count('function renderTasks()') == 1
+          assert s.count('async function measureTaskImpact(id)') == 1
+          print('SHUKYAKU-14 STATIC QA PASS')
+          PY
+      - name: JavaScript syntax validation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('owner.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          assert len(blocks)==1, 'Expected exactly one inline script'
+          Path('/tmp/shukyaku-14.js').write_text(blocks[0],encoding='utf-8')
+          PY
+          node --check /tmp/shukyaku-14.js
