@@ -2994,7 +2994,7 @@
       $('taskTableBody').innerHTML = items.length ? items.map((item) => {
         const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword;
         const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name;
-        const canMeasure = Boolean(item.landing_page_id) && item.status !== 'excluded';
+        const canMeasure = Boolean(item.landing_page_id) && !['excluded','on_hold','hold'].includes(item.status) && item.result_metrics?.humanQa?.status !== 'rollback';
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
