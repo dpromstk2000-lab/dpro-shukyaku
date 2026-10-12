@@ -68,3 +68,32 @@ jobs:
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
           node /tmp/guard-test.cjs
+      - name: Test task table rendering in isolated DOM stub
+        run: |
+          cat > /tmp/render-test.cjs <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('owner.html','utf8');
+          const fn=html.match(/    function renderTasks\(\) \{[\s\S]*?\n    \}\n/);
+          if(!fn)throw Error('renderTasks not found');
+          const elements={};
+          const $=id=>(elements[id]??=( {value:'',textContent:'',innerHTML:''} ));
+          const state={tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],managementSummary:{},taskImpactSummary:{}};
+          const ctx={$,state,escapeHtml:x=>String(x??''),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
+          vm.createContext(ctx);
+          vm.runInContext(fn[0]+';globalThis.render=renderTasks;',ctx);
+          function check(status,qa,due,measure,overdue){
+            state.tasks=[{id:'x',title:'Test',reason:'',priority:1,status,landing_page_id:'p',due_date:due,result_metrics:{humanQa:{status:qa}}}];
+            ctx.render();
+            const out=$('taskTableBody').innerHTML;
+            if(out.includes('measureTask(')!==measure)throw Error('measure button mismatch '+status+' '+qa);
+            if(out.includes('期限超過')!==overdue)throw Error('overdue mismatch '+status);
+          }
+          check('paused',null,'2026-08-13',false,false);
+          check('excluded',null,'2026-08-13',false,false);
+          check('todo','rollback','2026-08-13',false,true);
+          check('todo',null,'2026-08-13',true,true);
+          check('done',null,'2026-08-13',true,false);
+          check('todo',null,'2099-12-31',true,false);
+          console.log('SHUKYAKU-14 RENDER QA PASS');
+          JS
+          node /tmp/render-test.cjs
