@@ -248,6 +248,12 @@
     .compact-input, .compact-select { min-height:44px; padding:9px 12px; border:1px solid #bdcec6; border-radius:10px; background:#fff; color:var(--ink); outline:none; }
     .compact-input { min-width:240px; flex:1 1 260px; }
     .compact-select { min-width:150px; }
+    .task-quick-actions { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin:0 0 15px; }
+    .task-quick-actions .quick-label { color:var(--muted); font-size:.77rem; font-weight:800; margin-right:2px; }
+    .task-focus-button { border:1px solid var(--line); border-radius:10px; padding:8px 12px; min-height:40px; background:var(--surface-soft); color:var(--ink); font-size:.8rem; font-weight:800; }
+    .task-focus-button:hover { border-color:var(--brand-2); }
+    .task-focus-button.is-active { background:var(--brand); border-color:var(--brand); color:#fff; }
+    .task-focus-button:focus-visible { outline:3px solid var(--brand-2); outline-offset:2px; }
     .table-wrap { width:100%; overflow:auto; border:1px solid var(--line); border-radius:14px; }
     .data-table { width:100%; min-width:900px; border-collapse:collapse; background:#fff; }
     .data-table th, .data-table td { padding:13px 12px; border-bottom:1px solid #e5ede9; text-align:left; vertical-align:top; }
@@ -402,7 +408,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-19</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-20</p>
         </div>
       </div>
       <div class="top-actions">
@@ -902,6 +908,14 @@
               <span id="taskReviewSummary" class="badge off" aria-live="polite">保留確認：集計中</span>
               <span id="taskCountBadge" class="badge ok">0件</span>
             </div>
+            <div class="task-quick-actions" aria-label="優先確認タスクへ移動">
+              <span class="quick-label">優先確認</span>
+              <button type="button" class="task-focus-button is-active" data-task-focus="all" aria-pressed="true">すべて表示</button>
+              <button type="button" class="task-focus-button" data-task-focus="overdue" aria-pressed="false">期限超過 0件</button>
+              <button type="button" class="task-focus-button" data-task-focus="due" aria-pressed="false">確認日到来 0件</button>
+              <button type="button" class="task-focus-button" data-task-focus="soon" aria-pressed="false">7日以内 0件</button>
+              <button type="button" class="task-focus-button" data-task-focus="missing" aria-pressed="false">確認日未設定 0件</button>
+            </div>
             <div class="table-wrap"><table class="data-table" style="min-width:1120px"><thead><tr><th>改善タスク</th><th>対象</th><th>優先度</th><th>期限</th><th>実施前後</th><th>状態</th><th>操作</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
           </article>
         </section>
@@ -1174,7 +1188,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-19-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-20-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1200,6 +1214,7 @@
       managementSummary: null,
       loadedViews: new Set(),
       editor: { type: '', id: '' },
+      taskFocus: 'all',
     };
 
     const $ = (id) => document.getElementById(id);
@@ -1277,10 +1292,13 @@
       $('pageSearch').addEventListener('input', renderPages);
       $('pageStatusFilter').addEventListener('change', renderPages);
       $('pageIndexFilter').addEventListener('change', renderPages);
-      $('taskSearch').addEventListener('input', renderTasks);
-      $('taskStatusFilter').addEventListener('change', renderTasks);
-      $('taskPriorityFilter').addEventListener('change', renderTasks);
-      $('taskReviewFilter').addEventListener('change', renderTasks);
+      $('taskSearch').addEventListener('input', resetTaskFocusFromManualFilter);
+      $('taskStatusFilter').addEventListener('change', resetTaskFocusFromManualFilter);
+      $('taskPriorityFilter').addEventListener('change', resetTaskFocusFromManualFilter);
+      $('taskReviewFilter').addEventListener('change', resetTaskFocusFromManualFilter);
+      document.querySelectorAll('[data-task-focus]').forEach((button) => {
+        button.addEventListener('click', () => focusTaskList(button.dataset.taskFocus));
+      });
       $('companyRefreshButton').addEventListener('click', () => loadCompaniesView(true));
       $('companyCreateForm').addEventListener('submit', createCompany);
       $('companyCreatePlan').addEventListener('change', applyCreatePlanFeatures);
@@ -1456,7 +1474,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-19`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-20`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -2993,6 +3011,20 @@
       return 'later';
     }
 
+    function resetTaskFocusFromManualFilter() {
+      state.taskFocus = 'all';
+      renderTasks();
+    }
+
+    function focusTaskList(focus) {
+      if (!['all','overdue','due','soon','missing'].includes(focus)) return;
+      state.taskFocus = focus;
+      // Quick actions always show a meaningful global list, never inherit hidden filters.
+      ['taskSearch','taskStatusFilter','taskPriorityFilter','taskReviewFilter'].forEach((id) => { $(id).value = ''; });
+      renderTasks();
+      $('taskTableBody').closest('.table-wrap')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+
     function renderTasks() {
       const search = $('taskSearch').value.trim().toLowerCase();
       const status = $('taskStatusFilter').value;
@@ -3002,12 +3034,29 @@
       const reviewKind = (item) => taskPauseReviewState(item, todayJst);
       const allReviewDue = state.tasks.filter((item) => reviewKind(item) === 'due').length;
       const allReviewSoon = state.tasks.filter((item) => reviewKind(item) === 'soon').length;
+      const allReviewMissing = state.tasks.filter((item) => reviewKind(item) === 'missing').length;
       $('taskReviewSummary').textContent = `保留確認：要確認${allReviewDue}件・7日以内${allReviewSoon}件`;
       $('taskReviewSummary').className = 'badge ' + (allReviewDue ? 'wait' : allReviewSoon ? 'ok' : 'off');
       const isTaskOverdue = (item) => Boolean(item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status));
+      const allOverdue = state.tasks.filter(isTaskOverdue).length;
+      const focus = state.taskFocus || 'all';
+      const focusLabels = {
+        all: 'すべて表示',
+        overdue: `期限超過 ${allOverdue}件`,
+        due: `確認日到来 ${allReviewDue}件`,
+        soon: `7日以内 ${allReviewSoon}件`,
+        missing: `確認日未設定 ${allReviewMissing}件`
+      };
+      document.querySelectorAll('[data-task-focus]').forEach((button) => {
+        const key = button.dataset.taskFocus;
+        button.textContent = focusLabels[key] || 'すべて表示';
+        button.classList.toggle('is-active',key === focus);
+        button.setAttribute('aria-pressed',String(key === focus));
+      });
       const items = state.tasks.filter((item) => {
         const hay = [item.title,item.reason,item.recommended_action,item.description].join(' ').toLowerCase();
-        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority) && (!reviewFilter || reviewKind(item) === reviewFilter);
+        return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority) && (!reviewFilter || reviewKind(item) === reviewFilter)
+          && (focus === 'all' || (focus === 'overdue' ? isTaskOverdue(item) : reviewKind(item) === focus));
       }).sort((a,b) => Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))
         || Number(reviewKind(b) === 'due') - Number(reviewKind(a) === 'due')
         || Number(reviewKind(b) === 'soon') - Number(reviewKind(a) === 'soon')
