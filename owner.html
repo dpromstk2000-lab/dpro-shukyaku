@@ -3037,7 +3037,7 @@
       const allReviewMissing = state.tasks.filter((item) => reviewKind(item) === 'missing').length;
       $('taskReviewSummary').textContent = `保留確認：要確認${allReviewDue}件・7日以内${allReviewSoon}件`;
       $('taskReviewSummary').className = 'badge ' + (allReviewDue ? 'wait' : allReviewSoon ? 'ok' : 'off');
-      const isTaskOverdue = (item) => Boolean(item.due_date && /^\\d{4}-\\d{2}-\\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status));
+      const isTaskOverdue = (item) => Boolean(item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status));
       const allOverdue = state.tasks.filter(isTaskOverdue).length;
       const focus = state.taskFocus || 'all';
       const focusLabels = {
