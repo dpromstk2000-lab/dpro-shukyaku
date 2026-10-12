@@ -402,7 +402,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-17</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-18</p>
         </div>
       </div>
       <div class="top-actions">
@@ -1172,7 +1172,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-17-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-18-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1453,7 +1453,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-17`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-18`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -3001,7 +3001,12 @@
         const measurementLabel = item.result_metrics?.measuredAt ? '再測定' : '効果測定';
         const measureButton = canMeasure
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.measureTask('${item.id}')">${measurementLabel}</button>` : '';
-        const pausedGuide = item.status === 'paused' ? '<div class="table-sub" style="margin-top:5px">保留中：編集から保留理由・再開条件・確認日を記録してください。ROLLBACK後の再測定は不可です。</div>' : '';
+        const pauseNotes = item.status === 'paused' ? parsePauseNotes(item.recommended_action) : null;
+        const pauseReviewLate = pauseNotes && /^\d{4}-\d{2}-\d{2}$/.test(pauseNotes.review) && pauseNotes.review < todayJst;
+        const pauseReviewLabel = pauseNotes?.review ? '<span class="badge ' + (pauseReviewLate ? 'wait' : 'off') + '">' + (pauseReviewLate ? '確認日超過：' : '次回確認：') + escapeHtml(pauseNotes.review) + '</span>' : '';
+        const pauseReasonLabel = pauseNotes?.reason ? '<div class="table-sub">保留理由：' + escapeHtml(pauseNotes.reason) + '</div>' : '';
+        const pauseResumeLabel = pauseNotes?.resume ? '<div class="table-sub">再開条件：' + escapeHtml(pauseNotes.resume) + '</div>' : '';
+        const pausedGuide = item.status === 'paused' ? '<div class="table-sub" style="margin-top:5px">保留中：編集から保留理由・再開条件・確認日を記録してください。ROLLBACK後の再測定は不可です。</div>' + pauseReasonLabel + pauseResumeLabel + pauseReviewLabel : '';
         const qaPending = Boolean(item.result_metrics?.measuredAt) && item.result_metrics?.humanQa?.status === 'pending';
         const qaButtons = qaPending
           ? `<button class="mini-button" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','pass')">QA合格</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.reviewTaskQa('${item.id}','rollback')">ROLLBACK</button>` : '';
@@ -3053,7 +3058,7 @@
       const editorItem = item && typeof item === 'object' ? item : {};
       const isEdit = Boolean(editorItem.id);
 
-      state.editor = { type, id: editorItem.id || '' };
+      state.editor = { type, id: editorItem.id || '', pauseOriginal: type === 'task' ? parsePauseNotes(editorItem.recommended_action || '') : null };
       $('editorTitle').textContent = `${isEdit ? '編集' : '新規登録'}：${type === 'keyword' ? 'キーワード' : type === 'page' ? 'ページ' : '改善タスク'}`;
       $('editorSubtitle').textContent = type === 'keyword'
         ? '検索されたい言葉を、地域・サービス・目的と一緒に管理します。'
@@ -3066,6 +3071,12 @@
           ? pageEditorFields(editorItem)
           : taskEditorFields(editorItem);
       $('editorMessage').innerHTML = '';
+      if (type === 'task') {
+        $('editorFields').querySelector('[name="status"]')?.addEventListener('change', (event) => {
+          const helper = $('pauseNotesHelper');
+          if (helper) helper.hidden = event.target.value !== 'paused';
+        });
+      }
       $('editorModal').hidden = false;
       document.body.style.overflow = 'hidden';
       setTimeout(() => $('editorFields').querySelector('input,select,textarea')?.focus(), 0);
@@ -3087,10 +3098,47 @@
       return `${field('ページ名','pageName',item.page_name || '',true,'text','full')}${field('ページコード','pageCode',item.page_code || '',true)}${selectField('ページ種別','pageType',PAGE_TYPE_OPTIONS,item.page_type || 'service')}${field('ページURL','pageUrl',item.page_url || '',true,'url','full')}${selectField('公開状態','status',PAGE_STATUS_OPTIONS,item.status || 'draft')}${selectField('Google登録状態','indexingStatus',INDEX_STATUS_OPTIONS,item.indexing_status || 'unknown')}`;
     }
 
+    // Structured pause notes live inside the existing recommended_action text column.
+    // Never send pauseDraft keys to the Worker; keep all unrelated user text intact.
+    function parsePauseNotes(source = '') {
+      const match = String(source || '').match(/\[保留管理\]\r?\n([\s\S]*?)\r?\n\[\/保留管理\]/);
+      const lines = match ? match[1].split(/\r?\n/) : [];
+      const pick = (label) => {
+        const prefix = label + '：';
+        const line = lines.find((entry) => entry.startsWith(prefix));
+        return line ? line.slice(prefix.length).trim() : '';
+      };
+      return { reason: pick('保留理由'), resume: pick('再開条件'), review: pick('次回確認日') };
+    }
+
+    function buildPauseNotes(source, notes) {
+      const raw = String(source || '');
+      const originalBlock = /\n{0,2}\[保留管理\]\r?\n[\s\S]*?\r?\n\[\/保留管理\]/;
+      const base = raw.replace(originalBlock, '').trimEnd();
+      const clean = (value) => String(value || '').replace(/[\r\n]+/g, ' ').trim();
+      const reason = clean(notes.reason), resume = clean(notes.resume), review = clean(notes.review);
+      if (!reason && !resume && !review) return base;
+      const block = ['[保留管理]', '保留理由：' + reason, '再開条件：' + resume, '次回確認日：' + review, '[/保留管理]'].join('\n');
+      return base + (base ? '\n\n' : '') + block;
+    }
+
+    function taskPauseHelper(item = {}) {
+      const notes = parsePauseNotes(item.recommended_action || '');
+      const visible = (item.status || 'todo') === 'paused';
+      return '<div class="field full" id="pauseNotesHelper" ' + (visible ? '' : 'hidden') + '>' +
+        '<div class="form-grid" style="padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)">' +
+        '<div class="field full"><strong>保留管理の入力補助</strong><div class="table-sub">保留理由・再開条件・次回確認日を入力すると、保存時に既存の「推奨作業」へ追記します。元の文章は残ります。</div></div>' +
+        '<div class="field full"><label>保留理由</label><input class="input" name="pauseReasonDraft" type="text" maxlength="200" value="' + escapeHtml(notes.reason) + '" placeholder="例：変更後の動作が不安定"></div>' +
+        '<div class="field full"><label>再開条件</label><input class="input" name="pauseResumeDraft" type="text" maxlength="200" value="' + escapeHtml(notes.resume) + '" placeholder="例：安全な修正案が確定し再検証できる"></div>' +
+        '<div class="field"><label>次回確認日</label><input class="input" name="pauseReviewDraft" type="date" value="' + escapeHtml(notes.review) + '"></div>' +
+        '<div class="field full"><div class="table-sub">ROLLBACK済みタスクは保留解除後も再測定できません。記録の保存だけで再測定は実行されません。専用DB項目は未追加です。</div></div>' +
+        '</div></div>';
+    }
+
     function taskEditorFields(item={}) {
       const keywordOptions = [['','対象なし'],...state.keywords.map((x) => [x.id,x.keyword])];
       const pageOptions = [['','対象なし'],...state.pages.map((x) => [x.id,x.page_name])];
-      return `${field('タスク名','title',item.title || '',true,'text','full')}${selectField('対象キーワード','targetKeywordId',keywordOptions,item.target_keyword_id || '')}${selectField('対象ページ','landingPageId',pageOptions,item.landing_page_id || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',TASK_STATUS_OPTIONS,item.status || 'todo')}${field('期限','dueDate',item.due_date || '',false,'date')}${textareaField('改善理由','reason',item.reason || '','full')}${textareaField('推奨作業（保留中は再開条件・次回確認日も記載）','recommendedAction',item.recommended_action || '','full')}${item.status === 'paused' ? '<p class="table-sub">保留理由は「改善理由」、再開条件と次回確認日は「推奨作業」に記録できます。専用DB項目は未追加です。</p>' : ''}`;
+      return `${field('タスク名','title',item.title || '',true,'text','full')}${selectField('対象キーワード','targetKeywordId',keywordOptions,item.target_keyword_id || '')}${selectField('対象ページ','landingPageId',pageOptions,item.landing_page_id || '')}${selectField('優先度','priority',[[1,'1（最重要）'],[2,'2（重要）'],[3,'3（通常）'],[4,'4（低め）'],[5,'5（候補）']],item.priority || 3)}${selectField('状態','status',TASK_STATUS_OPTIONS,item.status || 'todo')}${field('期限','dueDate',item.due_date || '',false,'date')}${textareaField('改善理由','reason',item.reason || '','full')}${textareaField('推奨作業','recommendedAction',item.recommended_action || '','full')}${taskPauseHelper(item)}`;
     }
 
     function field(label,name,value,required=false,type='text',extra='') { return `<div class="field ${extra}"><label>${escapeHtml(label)}${required ? ' <span style="color:var(--danger)">必須</span>' : ''}</label><input class="input" name="${escapeHtml(name)}" type="${escapeHtml(type)}" value="${escapeHtml(value)}" ${required ? 'required' : ''}></div>`; }
@@ -3102,7 +3150,28 @@
       const form = new FormData($('editorForm'));
       const payload = Object.fromEntries(form.entries());
       if ('priority' in payload) payload.priority = Number(payload.priority);
-      const { type, id } = state.editor;
+      const { type, id, pauseOriginal } = state.editor;
+      if (type === 'task') {
+        const draft = {
+          reason: String(payload.pauseReasonDraft || '').trim(),
+          resume: String(payload.pauseResumeDraft || '').trim(),
+          review: String(payload.pauseReviewDraft || '').trim()
+        };
+        delete payload.pauseReasonDraft;
+        delete payload.pauseResumeDraft;
+        delete payload.pauseReviewDraft;
+        const original = pauseOriginal || { reason:'', resume:'', review:'' };
+        const changed = ['reason','resume','review'].some((key) => draft[key] !== original[key]);
+        if (changed && payload.status !== 'paused') {
+          showMessage('editorMessage', '保留管理の入力内容があります。状態を「保留」に変更するか、入力を元に戻してください。', 'warn');
+          return;
+        }
+        if (draft.review && (!/^\d{4}-\d{2}-\d{2}$/.test(draft.review) || Number.isNaN(Date.parse(draft.review)) || new Date(draft.review).toISOString().slice(0,10) !== draft.review)) {
+          showMessage('editorMessage', '次回確認日を正しい日付で入力してください。', 'warn');
+          return;
+        }
+        if (changed) payload.recommendedAction = buildPauseNotes(payload.recommendedAction, draft);
+      }
       const base = type === 'keyword' ? '/api/keywords' : type === 'page' ? '/api/pages' : '/api/tasks';
       $('editorSaveButton').disabled = true;
       setLoading(true, '保存しています');
