@@ -1172,7 +1172,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-13-OWNER-20260921';
+    const APP_VERSION = 'SHUKYAKU-15-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1453,7 +1453,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-13`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-15`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -2982,7 +2982,9 @@
         const hay = [item.title,item.reason,item.recommended_action,item.description].join(' ').toLowerCase();
         return (!search || hay.includes(search)) && (!status || item.status === status) && (!priority || String(item.priority) === priority);
       });
-      $('taskCountBadge').textContent = `${items.length}件`;
+      const todayJst = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'});
+      const overdueCount = items.filter((item) => item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status)).length;
+      $('taskCountBadge').textContent = `${items.length}件${overdueCount ? `（期限超過${overdueCount}件）` : ''}`;
       const sm = state.managementSummary || {};
       const impact = state.taskImpactSummary || {};
       $('taskSummary').innerHTML = summaryItems([
@@ -3004,7 +3006,7 @@
         return `<tr><td><div class="table-main">${escapeHtml(item.title)}</div><div class="table-sub">${escapeHtml(item.reason || item.recommended_action || '詳細なし')}</div></td>
         <td>${escapeHtml([keyword,page].filter(Boolean).join('／') || '対象未設定')}</td>
         <td><span class="priority-mark">${escapeHtml(item.priority)}</span></td>
-        <td>${escapeHtml(item.due_date || '未設定')}${item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}) && !['done','excluded','paused'].includes(item.status) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
+        <td>${escapeHtml(item.due_date || '未設定')}${item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date) && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status) ? '<span class="badge wait" style="margin-left:6px">期限超過</span>' : ''}</td>
         <td>${renderTaskImpact(item)}</td>
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
         <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;

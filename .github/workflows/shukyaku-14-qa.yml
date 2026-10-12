@@ -1,4 +1,4 @@
-name: SHUKYAKU-14 Isolated QA
+name: SHUKYAKU-15 Isolated QA
 on:
   workflow_dispatch:
   pull_request:
@@ -9,7 +9,7 @@ on:
       - .github/workflows/shukyaku-14-qa.yml
   push:
     branches:
-      - shukyaku-14-safe-task-qa-20261012
+      - shukyaku-15-version-task-ux-20261012
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
@@ -36,6 +36,18 @@ jobs:
           assert s.count('function renderTasks()') == 1
           assert s.count('async function measureTaskImpact(id)') == 1
           print('SHUKYAKU-14 STATIC QA PASS')
+          PY
+      - name: Verify SHUKYAKU-15 version and overdue counter
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s = Path('owner.html').read_text()
+          assert "SHUKYAKU-15-OWNER-20261012" in s
+          assert '${companyName}｜SHUKYAKU-15' in s
+          assert 'SHUKYAKU-13' not in s
+          assert 'const overdueCount = items.filter' in s
+          assert 'item.due_date < todayJst' in s
+          print('SHUKYAKU-15 VERSION AND OVERDUE QA PASS')
           PY
       - name: JavaScript syntax validation
         run: |
