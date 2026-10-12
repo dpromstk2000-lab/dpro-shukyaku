@@ -21,7 +21,7 @@ const state = {
 };
 const escapeHtml = x=>String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const ctx = {$, state, Date:FixedDate, escapeHtml, document:{querySelectorAll:()=>[]},TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了']],
-  summaryItems:()=>'', renderTaskImpact:()=>'', taskStatusBadge:()=>'', optionLabel:()=>'',window:{SHUKYAKU:{}},console};
+  summaryItems:()=>'', renderTaskNextActions:()=>{},renderTaskImpact:()=>'', taskStatusBadge:()=>'', optionLabel:()=>'',window:{SHUKYAKU:{}},console};
 vm.createContext(ctx);
 vm.runInContext(['parsePauseNotes','taskPauseReviewState','renderTasks'].map(extract).join('\n')+
   ';globalThis.qa={taskPauseReviewState,renderTasks};',ctx);
