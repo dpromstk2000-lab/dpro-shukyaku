@@ -1,0 +1,105 @@
+name: SHUKYAKU-14 Isolated QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - owner.html
+      - .github/workflows/shukyaku-14-qa.yml
+  push:
+    branches:
+      - shukyaku-14-safe-task-qa-20261012
+    paths:
+      - owner.html
+      - .github/workflows/shukyaku-14-qa.yml
+permissions:
+  contents: read
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate task guards and HTML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('owner.html').read_text(encoding='utf-8')
+          assert s.count('<script>') == 1 and s.count('</script>') == 1
+          assert "['todo','未着手']" in s and "['paused','保留']" in s
+          assert "item.result_metrics?.humanQa?.status !== 'rollback'" in s
+          assert "['excluded','paused'].includes(item.status)" in s
+          assert "保留・対象外・ROLLBACK済みのタスクは再測定できません" in s
+          assert "期限超過" in s
+          assert "timeZone:'Asia/Tokyo'" in s
+          assert s.count('function renderTasks()') == 1
+          assert s.count('async function measureTaskImpact(id)') == 1
+          print('SHUKYAKU-14 STATIC QA PASS')
+          PY
+      - name: JavaScript syntax validation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('owner.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          assert len(blocks)==1, 'Expected exactly one inline script'
+          Path('/tmp/shukyaku-14.js').write_text(blocks[0],encoding='utf-8')
+          PY
+          node --check /tmp/shukyaku-14.js
+      - name: Exercise measurement guard in isolated JavaScript VM
+        run: |
+          cat > /tmp/guard-test.cjs <<'JS'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('owner.html','utf8');
+          const match = html.match(/async function measureTaskImpact\(id\) \{[\s\S]*?\n    \}\n/);
+          if (!match) throw new Error('measurement function not found');
+          let apiCalls = 0, confirms = 0, notices = 0;
+          const state = {tasks:[],pages:[],pagespeed:{},loadedViews:new Set()};
+          const context = {state, toast:()=>{notices++}, confirm:()=>{confirms++;return false}, setLoading:()=>{}, strategyLabel:()=>'', api:()=>{apiCalls++}, console};
+          vm.createContext(context);
+          vm.runInContext(match[0]+'; globalThis.testMeasure=measureTaskImpact;',context);
+          (async()=>{
+            for (const [status,qa] of [['paused',null],['excluded',null],['todo','rollback']]) {
+              state.tasks=[{id:'x',status,landing_page_id:'p',result_metrics:{humanQa:{status:qa}}}];
+              await context.testMeasure('x');
+            }
+            if (apiCalls || confirms || notices !== 3) throw new Error('Blocked task guard failed');
+            state.tasks=[{id:'x',status:'todo',landing_page_id:'p',result_metrics:{}}];
+            await context.testMeasure('x');
+            if (confirms !== 1 || apiCalls !== 0) throw new Error('Normal task confirmation failed');
+            console.log('SHUKYAKU-14 ISOLATED GUARD QA PASS');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/guard-test.cjs
+      - name: Test task table rendering in isolated DOM stub
+        run: |
+          cat > /tmp/render-test.cjs <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('owner.html','utf8');
+          const fn=html.match(/    function renderTasks\(\) \{[\s\S]*?\n    \}\n/);
+          if(!fn)throw Error('renderTasks not found');
+          const elements={};
+          const $=id=>(elements[id]??=( {value:'',textContent:'',innerHTML:''} ));
+          const state={tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],managementSummary:{},taskImpactSummary:{}};
+          const ctx={$,state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
+          vm.createContext(ctx);
+          vm.runInContext(fn[0]+';globalThis.render=renderTasks;',ctx);
+          function check(status,qa,due,measure,overdue){
+            state.tasks=[{id:'x',title:'Test',reason:'',priority:1,status,landing_page_id:'p',due_date:due,result_metrics:{humanQa:{status:qa}}}];
+            ctx.render();
+            const out=$('taskTableBody').innerHTML;
+            if(out.includes('measureTask(')!==measure)throw Error('measure button mismatch '+status+' '+qa);
+            if(out.includes('期限超過')!==overdue)throw Error('overdue mismatch '+status);
+          }
+          check('paused',null,'2026-08-13',false,false);
+          check('excluded',null,'2026-08-13',false,false);
+          check('todo','rollback','2026-08-13',false,true);
+          check('todo',null,'2026-08-13',true,true);
+          check('done',null,'2026-08-13',true,false);
+          check('todo',null,'2099-12-31',true,false);
+          console.log('SHUKYAKU-14 RENDER QA PASS');
+          JS
+          node /tmp/render-test.cjs
