@@ -420,7 +420,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-21</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-22</p>
         </div>
       </div>
       <div class="top-actions">
@@ -906,7 +906,7 @@
         <section id="view-tasks" class="view" hidden>
           <div class="page-head">
             <div><h1>改善タスク</h1><p>診断結果から作業を絞り、変更前後の点数まで比較します。</p></div>
-            <div class="page-actions"><button id="addTaskButton" class="secondary" type="button">改善タスクを追加</button></div>
+            <div class="page-actions"><button id="taskCsvExportButton" class="secondary" type="button" disabled title="表示中の改善タスクをExcel等で開けるCSVとして保存">表示中のタスクをCSV出力</button><button id="addTaskButton" class="secondary" type="button">改善タスクを追加</button></div>
           </div>
           <div id="taskSummary" class="summary-strip"></div>
           <section id="taskNextActions" class="task-next-actions" aria-label="次に対応する改善タスク" hidden></section>
@@ -1201,7 +1201,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-21-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-22-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1228,6 +1228,7 @@
       loadedViews: new Set(),
       editor: { type: '', id: '' },
       taskFocus: 'all',
+      exportTasks: [],
     };
 
     const $ = (id) => document.getElementById(id);
@@ -1295,6 +1296,7 @@
       $('addKeywordButton').addEventListener('click', () => openEditor('keyword'));
       $('addPageButton').addEventListener('click', () => openEditor('page'));
       $('addTaskButton').addEventListener('click', () => openEditor('task'));
+      $('taskCsvExportButton').addEventListener('click', exportVisibleTasksCsv);
       $('editorCloseButton').addEventListener('click', closeEditor);
       $('editorCancelButton').addEventListener('click', closeEditor);
       $('editorForm').addEventListener('submit', saveEditor);
@@ -1488,7 +1490,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-21`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-22`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -3124,6 +3126,9 @@
         || Number(a.priority ?? 99) - Number(b.priority ?? 99)
         || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31')));
       const overdueCount = items.filter(isTaskOverdue).length;
+      state.exportTasks = items.slice();
+      $('taskCsvExportButton').disabled = !state.token || items.length === 0;
+      $('taskCsvExportButton').textContent = `表示中${items.length}件をCSV出力`;
       $('taskCountBadge').textContent = `${items.length}件${overdueCount ? `（期限超過${overdueCount}件）` : ''}`;
       const sm = state.managementSummary || {};
       const impact = state.taskImpactSummary || {};
@@ -3158,6 +3163,69 @@
         <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
       }).join('') : emptyTableRow(7, '条件に合う改善タスクがありません。');
       renderTaskNextActions();
+    }
+
+    // Export only the rows currently visible under task search, status, priority
+    // and quick-focus controls. All formula-like CSV cells are escaped for Excel.
+    function escapeTaskCsvCell(value) {
+      let cell = String(value ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'');
+      if (/^[\s\u200B-\u200D\uFEFF]*[=+\-@]/u.test(cell) || /^[\t\r\n]/.test(cell)) cell = "'" + cell;
+      return '"' + cell.replace(/"/g,'""') + '"';
+    }
+
+    function buildTaskCsv(items, todayJst) {
+      const headings = [
+        'タスク名','対象キーワード','対象ページ','優先度','状態','期限','期限超過',
+        '保留理由','再開条件','次回確認日','確認日状況',
+        '測定前Performance','測定後Performance','QA結果','改善理由','推奨作業'
+      ];
+      const rows = items.map((item) => {
+        const pause = parsePauseNotes(item.recommended_action || '');
+        const review = taskPauseReviewState(item,todayJst);
+        const keyword = state.keywords.find((x) => x.id === item.target_keyword_id)?.keyword || '';
+        const page = state.pages.find((x) => x.id === item.landing_page_id)?.page_name || '';
+        const baseline = item.baseline_metrics || {};
+        const result = item.result_metrics || {};
+        const before = result.before || baseline;
+        const after = result.after || {};
+        const score = (value) => Number.isFinite(Number(value)) && value !== null && value !== '' ? String(value) : '';
+        const due = item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date)
+          && item.due_date < todayJst && !['done','excluded','paused'].includes(item.status);
+        const reviewLabel = ({due:'確認日到来・超過',soon:'7日以内',missing:'確認日未設定',later:'予定あり'})[review] || '';
+        return [
+          item.title || '',keyword,page,item.priority ?? '',optionLabel(TASK_STATUS_OPTIONS,item.status,item.status),
+          item.due_date || '',due ? 'はい' : '',
+          item.status === 'paused' ? pause.reason : '',
+          item.status === 'paused' ? pause.resume : '',
+          item.status === 'paused' ? pause.review : '',
+          reviewLabel,score(before.performanceScore),score(after.performanceScore),
+          result.humanQa?.status || '',item.reason || '',
+          String(item.recommended_action || '').replace(/\n{0,2}\[保留管理\]\r?\n[\s\S]*?\r?\n\[\/保留管理\]/,'').trim()
+        ];
+      });
+      return [headings,...rows].map((row) => row.map(escapeTaskCsvCell).join(',')).join('\r\n') + '\r\n';
+    }
+
+    function exportVisibleTasksCsv() {
+      if (!state.token || !state.exportTasks.length) {
+        toast('出力できる改善タスクがありません。', 'warn');
+        return;
+      }
+      const todayJst = new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
+      const csv = '\uFEFF' + buildTaskCsv(state.exportTasks,todayJst);
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'DPRO_SHUKYAKU_TASKS_' + todayJst.replaceAll('-','') + '.csv';
+      document.body.appendChild(link);
+      try {
+        link.click();
+        toast('表示中の改善タスク ' + state.exportTasks.length + '件のCSV保存を開始しました。', 'success');
+      } finally {
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url),1500);
+      }
     }
 
     function renderTaskImpact(item) {
@@ -3442,7 +3510,7 @@
       } finally {
         clearSession();
         state.bootstrap = null;
-        state.keywords = []; state.pages = []; state.tasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.ga4 = { status:null, properties:[], summary:null }; state.conversions = { summary:null }; state.businessProfile = { status:null, accounts:[], locations:[], summary:null }; state.loadedViews.clear();
+        state.keywords = []; state.pages = []; state.tasks = []; state.exportTasks = []; state.searchConsole = { status:null, properties:[], summary:null }; state.ga4 = { status:null, properties:[], summary:null }; state.conversions = { summary:null }; state.businessProfile = { status:null, accounts:[], locations:[], summary:null }; state.loadedViews.clear();
         showPreauth();
         setLoading(false);
         toast('ログアウトしました。', 'success');
@@ -3473,6 +3541,9 @@
     function clearSession() {
       state.token = '';
       state.expiresAt = '';
+      state.exportTasks = [];
+      const csvButton = $('taskCsvExportButton');
+      if (csvButton) csvButton.disabled = true;
       sessionStorage.removeItem(SESSION_KEY);
       if (state.sessionTimer) clearInterval(state.sessionTimer);
       $('sessionRemaining').textContent = '―';

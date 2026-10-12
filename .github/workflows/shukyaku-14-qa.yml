@@ -1,4 +1,4 @@
-name: SHUKYAKU-21 Isolated QA
+name: SHUKYAKU-22 Isolated QA
 on:
   workflow_dispatch:
   pull_request:
@@ -11,9 +11,10 @@ on:
       - .github/scripts/shukyaku-19-review-qa.cjs
       - .github/scripts/shukyaku-20-focus-qa.cjs
       - .github/scripts/shukyaku-21-next-actions-qa.cjs
+      - .github/scripts/shukyaku-22-csv-qa.cjs
   push:
     branches:
-      - shukyaku-21-next-actions-20261012
+      - shukyaku-22-task-csv-export-20261012
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
@@ -21,6 +22,7 @@ on:
       - .github/scripts/shukyaku-19-review-qa.cjs
       - .github/scripts/shukyaku-20-focus-qa.cjs
       - .github/scripts/shukyaku-21-next-actions-qa.cjs
+      - .github/scripts/shukyaku-22-csv-qa.cjs
 permissions:
   contents: read
 jobs:
@@ -45,13 +47,13 @@ jobs:
           assert s.count('async function measureTaskImpact(id)') == 1
           print('SHUKYAKU-14 STATIC QA PASS')
           PY
-      - name: Verify SHUKYAKU-21 version and next-action controls
+      - name: Verify SHUKYAKU-22 version and CSV export controls
         run: |
           python3 - <<'PY'
           from pathlib import Path
           s = Path('owner.html').read_text()
-          assert "SHUKYAKU-21-OWNER-20261012" in s
-          assert '${companyName}｜SHUKYAKU-21' in s
+          assert "SHUKYAKU-22-OWNER-20261012" in s
+          assert '${companyName}｜SHUKYAKU-22' in s
           assert 'SHUKYAKU-13' not in s
           assert 'const overdueCount = items.filter(isTaskOverdue).length' in s
           assert 'Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))' in s
@@ -83,7 +85,13 @@ jobs:
           assert "function openNextTaskEditor(event)" in s
           assert "renderTaskNextActions();" in s
           assert "data-task-open-id" in s
-          print('SHUKYAKU-21 VERSION, FOCUS AND NEXT ACTION QA PASS')
+          assert 'id="taskCsvExportButton"' in s
+          assert 'function escapeTaskCsvCell(value)' in s
+          assert 'function buildTaskCsv(items, todayJst)' in s
+          assert 'function exportVisibleTasksCsv()' in s
+          assert 'state.exportTasks = items.slice();' in s
+          assert 'state.exportTasks = []' in s
+          print('SHUKYAKU-22 VERSION AND SAFE CSV QA PASS')
           PY
       - name: Run paused-task editor regression QA
         run: node .github/scripts/shukyaku-18-pause-qa.cjs
@@ -93,6 +101,8 @@ jobs:
         run: node .github/scripts/shukyaku-20-focus-qa.cjs
       - name: Run SHUKYAKU-21 next actions regression QA
         run: node .github/scripts/shukyaku-21-next-actions-qa.cjs
+      - name: Run SHUKYAKU-22 filtered CSV export QA
+        run: node .github/scripts/shukyaku-22-csv-qa.cjs
       - name: JavaScript syntax validation
         run: |
           python3 - <<'PY'
