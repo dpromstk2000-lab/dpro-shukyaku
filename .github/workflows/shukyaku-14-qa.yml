@@ -42,3 +42,29 @@ jobs:
           Path('/tmp/shukyaku-14.js').write_text(blocks[0],encoding='utf-8')
           PY
           node --check /tmp/shukyaku-14.js
+      - name: Exercise measurement guard in isolated JavaScript VM
+        run: |
+          cat > /tmp/guard-test.cjs <<'JS'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('owner.html','utf8');
+          const match = html.match(/async function measureTaskImpact\(id\) \{[\s\S]*?\n    \}\n/);
+          if (!match) throw new Error('measurement function not found');
+          let apiCalls = 0, confirms = 0, notices = 0;
+          const state = {tasks:[],pages:[],pagespeed:{},loadedViews:new Set()};
+          const context = {state, toast:()=>{notices++}, confirm:()=>{confirms++;return false}, setLoading:()=>{}, strategyLabel:()=>'', api:()=>{apiCalls++}, console};
+          vm.createContext(context);
+          vm.runInContext(match[0]+'; globalThis.testMeasure=measureTaskImpact;',context);
+          (async()=>{
+            for (const [status,qa] of [['paused',null],['excluded',null],['todo','rollback']]) {
+              state.tasks=[{id:'x',status,landing_page_id:'p',result_metrics:{humanQa:{status:qa}}}];
+              await context.testMeasure('x');
+            }
+            if (apiCalls || confirms || notices !== 3) throw new Error('Blocked task guard failed');
+            state.tasks=[{id:'x',status:'todo',landing_page_id:'p',result_metrics:{}}];
+            await context.testMeasure('x');
+            if (confirms !== 1 || apiCalls !== 0) throw new Error('Normal task confirmation failed');
+            console.log('SHUKYAKU-14 ISOLATED GUARD QA PASS');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/guard-test.cjs
