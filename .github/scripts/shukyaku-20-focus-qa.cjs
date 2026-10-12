@@ -35,7 +35,7 @@ const state={
 const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const ctx={$ ,document,state,Date:FixedDate,escapeHtml,console,
   TASK_STATUS_OPTIONS:[['todo','未着手'],['doing','対応中'],['paused','保留'],['done','完了']],
-  summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}},
+  summaryItems:()=>'',renderTaskNextActions:()=>{},renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}},
   api:()=>{mutationCount++;throw Error('No API calls expected')}
 };
 vm.createContext(ctx);
