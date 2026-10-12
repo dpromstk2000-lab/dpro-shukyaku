@@ -1,4 +1,4 @@
-name: SHUKYAKU-20 Isolated QA
+name: SHUKYAKU-21 Isolated QA
 on:
   workflow_dispatch:
   pull_request:
@@ -10,15 +10,17 @@ on:
       - .github/scripts/shukyaku-18-pause-qa.cjs
       - .github/scripts/shukyaku-19-review-qa.cjs
       - .github/scripts/shukyaku-20-focus-qa.cjs
+      - .github/scripts/shukyaku-21-next-actions-qa.cjs
   push:
     branches:
-      - shukyaku-20-task-quick-actions-20261012
+      - shukyaku-21-next-actions-20261012
     paths:
       - owner.html
       - .github/workflows/shukyaku-14-qa.yml
       - .github/scripts/shukyaku-18-pause-qa.cjs
       - .github/scripts/shukyaku-19-review-qa.cjs
       - .github/scripts/shukyaku-20-focus-qa.cjs
+      - .github/scripts/shukyaku-21-next-actions-qa.cjs
 permissions:
   contents: read
 jobs:
@@ -43,13 +45,13 @@ jobs:
           assert s.count('async function measureTaskImpact(id)') == 1
           print('SHUKYAKU-14 STATIC QA PASS')
           PY
-      - name: Verify SHUKYAKU-20 version and focus controls
+      - name: Verify SHUKYAKU-21 version and next-action controls
         run: |
           python3 - <<'PY'
           from pathlib import Path
           s = Path('owner.html').read_text()
-          assert "SHUKYAKU-20-OWNER-20261012" in s
-          assert '${companyName}｜SHUKYAKU-20' in s
+          assert "SHUKYAKU-21-OWNER-20261012" in s
+          assert '${companyName}｜SHUKYAKU-21' in s
           assert 'SHUKYAKU-13' not in s
           assert 'const overdueCount = items.filter(isTaskOverdue).length' in s
           assert 'Number(isTaskOverdue(b)) - Number(isTaskOverdue(a))' in s
@@ -76,7 +78,12 @@ jobs:
           assert "function focusTaskList(focus)" in s
           assert "function resetTaskFocusFromManualFilter()" in s
           assert "const allOverdue = state.tasks.filter(isTaskOverdue).length" in s
-          print('SHUKYAKU-20 VERSION AND FOCUS QA PASS')
+          assert 'id="taskNextActions"' in s
+          assert "function renderTaskNextActions()" in s
+          assert "function openNextTaskEditor(event)" in s
+          assert "renderTaskNextActions();" in s
+          assert "data-task-open-id" in s
+          print('SHUKYAKU-21 VERSION, FOCUS AND NEXT ACTION QA PASS')
           PY
       - name: Run paused-task editor regression QA
         run: node .github/scripts/shukyaku-18-pause-qa.cjs
@@ -84,6 +91,8 @@ jobs:
         run: node .github/scripts/shukyaku-19-review-qa.cjs
       - name: Run SHUKYAKU-20 one-click focus regression QA
         run: node .github/scripts/shukyaku-20-focus-qa.cjs
+      - name: Run SHUKYAKU-21 next actions regression QA
+        run: node .github/scripts/shukyaku-21-next-actions-qa.cjs
       - name: JavaScript syntax validation
         run: |
           python3 - <<'PY'
@@ -131,7 +140,7 @@ jobs:
           const elements={};
           const $=id=>(elements[id]??=( {value:'',textContent:'',innerHTML:''} ));
           const state={tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],managementSummary:{},taskImpactSummary:{}};
-          const ctx={$,document:{querySelectorAll:()=>[]},state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),parsePauseNotes:()=>({reason:'',resume:'',review:''}),taskPauseReviewState:item=>item.status==='paused'?'later':'not-paused',summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
+          const ctx={$,document:{querySelectorAll:()=>[]},state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),parsePauseNotes:()=>({reason:'',resume:'',review:''}),taskPauseReviewState:item=>item.status==='paused'?'later':'not-paused',summaryItems:()=>'',renderTaskNextActions:()=>{},renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
           vm.createContext(ctx);
           vm.runInContext(fn[0]+';globalThis.render=renderTasks;',ctx);
           function check(status,qa,due,measure,overdue){

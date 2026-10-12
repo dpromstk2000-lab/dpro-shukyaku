@@ -254,6 +254,18 @@
     .task-focus-button:hover { border-color:var(--brand-2); }
     .task-focus-button.is-active { background:var(--brand); border-color:var(--brand); color:#fff; }
     .task-focus-button:focus-visible { outline:3px solid var(--brand-2); outline-offset:2px; }
+    .task-next-actions { margin-bottom:16px; padding:16px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+    .task-next-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:11px; }
+    .task-next-head h2 { margin:0; font-size:1.08rem; color:var(--ink); }
+    .task-next-head p { margin:0; font-size:.8rem; color:var(--muted); }
+    .task-next-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .task-next-item { padding:14px; background:var(--surface-soft); border:1px solid var(--line); border-radius:12px; min-width:0; }
+    .task-next-item-title { font-size:.93rem; line-height:1.5; font-weight:800; overflow-wrap:anywhere; }
+    .task-next-item-info { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0; font-size:.78rem; color:var(--muted); }
+    .task-next-item-advice { font-size:.82rem; line-height:1.55; overflow-wrap:anywhere; white-space:pre-line; margin:6px 0 11px; }
+    .task-next-item button { border:1px solid #bdd2c8; border-radius:10px; min-height:40px; background:#fff; color:var(--brand); font-size:.83rem; font-weight:800; padding:7px 13px; }
+    .task-next-item button:focus-visible { outline:3px solid var(--brand-2); outline-offset:2px; }
+    @media (max-width:800px) { .task-next-grid {grid-template-columns:1fr;} }
     .table-wrap { width:100%; overflow:auto; border:1px solid var(--line); border-radius:14px; }
     .data-table { width:100%; min-width:900px; border-collapse:collapse; background:#fff; }
     .data-table th, .data-table td { padding:13px 12px; border-bottom:1px solid #e5ede9; text-align:left; vertical-align:top; }
@@ -408,7 +420,7 @@
         <div class="brand-mark">D</div>
         <div class="brand-copy">
           <p class="brand-title">DPRO集客ナビ</p>
-          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-20</p>
+          <p id="brandSub" class="brand-sub">契約会社別運用版｜SHUKYAKU-21</p>
         </div>
       </div>
       <div class="top-actions">
@@ -897,6 +909,7 @@
             <div class="page-actions"><button id="addTaskButton" class="secondary" type="button">改善タスクを追加</button></div>
           </div>
           <div id="taskSummary" class="summary-strip"></div>
+          <section id="taskNextActions" class="task-next-actions" aria-label="次に対応する改善タスク" hidden></section>
           <article class="card">
             <div class="management-toolbar">
               <div class="filter-group">
@@ -1188,7 +1201,7 @@
     'use strict';
 
     const API_BASE = 'https://dpro-shukyaku-api.dpromstk2000.workers.dev';
-    const APP_VERSION = 'SHUKYAKU-20-OWNER-20261012';
+    const APP_VERSION = 'SHUKYAKU-21-OWNER-20261012';
     const SESSION_KEY = 'dpro_shukyaku_session_v1';
 
     const state = {
@@ -1296,6 +1309,7 @@
       $('taskStatusFilter').addEventListener('change', resetTaskFocusFromManualFilter);
       $('taskPriorityFilter').addEventListener('change', resetTaskFocusFromManualFilter);
       $('taskReviewFilter').addEventListener('change', resetTaskFocusFromManualFilter);
+      $('taskNextActions').addEventListener('click', openNextTaskEditor);
       document.querySelectorAll('[data-task-focus]').forEach((button) => {
         button.addEventListener('click', () => focusTaskList(button.dataset.taskFocus));
       });
@@ -1474,7 +1488,7 @@
       const userName = data.user?.displayName || data.user?.display_name || '管理者';
       state.featureMap = Object.fromEntries((data.featureFlags || []).map((flag) => [flag.feature_key, Boolean(flag.enabled)]));
       $('sidebarCompanyName').textContent = companyName;
-      $('brandSub').textContent = `${companyName}｜SHUKYAKU-20`;
+      $('brandSub').textContent = `${companyName}｜SHUKYAKU-21`;
       $('sidebarUserName').textContent = userName;
       $('dashboardGreeting').textContent = `${companyName}の現在の準備状況を確認できます。`;
       $('metricKeywords').textContent = String(data.summary?.targetKeywordCount ?? 0);
@@ -3011,6 +3025,53 @@
       return 'later';
     }
 
+    // Read-only shortlist: no task writes or measuring happen until the user
+    // opens the existing editor and explicitly saves a change.
+    function renderTaskNextActions() {
+      const section = $('taskNextActions');
+      const todayJst = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'});
+      const eligible = (item) => ['todo','doing','waiting_publish','measuring'].includes(item.status)
+        && item.result_metrics?.humanQa?.status !== 'rollback';
+      const overdue = (item) => item.due_date && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date)
+        && item.due_date < todayJst;
+      const queue = state.tasks.filter(eligible).sort((a,b) =>
+        Number(Boolean(overdue(b))) - Number(Boolean(overdue(a)))
+        || Number(a.priority ?? 99) - Number(b.priority ?? 99)
+        || String(a.due_date || '9999-12-31').localeCompare(String(b.due_date || '9999-12-31'))
+        || String(a.title || '').localeCompare(String(b.title || ''))
+      );
+      const filtersActive = (state.taskFocus || 'all') !== 'all'
+        || ['taskSearch','taskStatusFilter','taskPriorityFilter','taskReviewFilter'].some((id) => Boolean($(id).value));
+      section.hidden = queue.length === 0 || filtersActive;
+      if (section.hidden) { section.innerHTML = ''; return; }
+      const cards = queue.slice(0,2).map((item) => {
+        const dueLabel = overdue(item) ? '期限超過：' + item.due_date
+          : item.due_date ? '期限：' + item.due_date : '期限未設定';
+        const advice = String(item.recommended_action || item.reason || '作業内容は編集画面で確認してください。')
+          .replace(/\[保留管理\][\s\S]*?\[\/保留管理\]/g,'').trim();
+        const preview = advice.length > 140 ? advice.slice(0,140) + '…' : advice;
+        return '<div class="task-next-item">'
+          + '<div class="task-next-item-title">' + escapeHtml(item.title || '無題の改善タスク') + '</div>'
+          + '<div class="task-next-item-info"><span>' + escapeHtml(dueLabel) + '</span><span>優先度 ' + escapeHtml(item.priority ?? '―')
+          + '</span><span>' + escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status)) + '</span></div>'
+          + '<div class="task-next-item-advice">' + escapeHtml(preview) + '</div>'
+          + '<button type="button" data-task-open-id="' + escapeHtml(item.id) + '">編集して対応を確認</button>'
+          + '</div>';
+      }).join('');
+      section.innerHTML = '<div class="task-next-head"><h2>全体の優先対応タスク</h2><p>未完了・対応可能 ' + queue.length
+        + '件から優先度順に最大2件を表示。編集するまでデータは変更されません。</p></div>'
+        + '<div class="task-next-grid">' + cards + '</div>';
+    }
+
+    function openNextTaskEditor(event) {
+      const button = event.target.closest('[data-task-open-id]');
+      if (!button) return;
+      const item = state.tasks.find((task) => String(task.id) === button.dataset.taskOpenId);
+      if (!item || !['todo','doing','waiting_publish','measuring'].includes(item.status)
+        || item.result_metrics?.humanQa?.status === 'rollback') return;
+      openEditor('task', item);
+    }
+
     function resetTaskFocusFromManualFilter() {
       state.taskFocus = 'all';
       renderTasks();
@@ -3096,6 +3157,7 @@
         <td><span class="badge ${taskStatusBadge(item.status)}">${escapeHtml(optionLabel(TASK_STATUS_OPTIONS,item.status,item.status))}</span></td>
         <td><div class="row-actions">${measureButton}${qaButtons}<button class="mini-button" type="button" onclick="window.SHUKYAKU.edit('task','${item.id}')">編集</button><button class="mini-button delete" type="button" onclick="window.SHUKYAKU.remove('task','${item.id}')">削除</button></div></td></tr>`;
       }).join('') : emptyTableRow(7, '条件に合う改善タスクがありません。');
+      renderTaskNextActions();
     }
 
     function renderTaskImpact(item) {
