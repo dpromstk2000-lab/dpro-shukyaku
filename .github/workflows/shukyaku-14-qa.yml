@@ -84,7 +84,7 @@ jobs:
           const elements={};
           const $=id=>(elements[id]??=( {value:'',textContent:'',innerHTML:''} ));
           const state={tasks:[],keywords:[],pages:[{id:'p',page_name:'Test'}],managementSummary:{},taskImpactSummary:{}};
-          const ctx={$,state,escapeHtml:x=>String(x??''),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
+          const ctx={$,state,TASK_STATUS_OPTIONS:[['todo','未着手'],['paused','保留'],['done','完了'],['excluded','対象外']],escapeHtml:x=>String(x??''),summaryItems:()=>'',renderTaskImpact:()=>'',taskStatusBadge:()=>'',optionLabel:()=>'',window:{SHUKYAKU:{}}};
           vm.createContext(ctx);
           vm.runInContext(fn[0]+';globalThis.render=renderTasks;',ctx);
           function check(status,qa,due,measure,overdue){
